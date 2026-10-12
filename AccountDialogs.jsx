@@ -9,6 +9,9 @@ import { Spinner, TrashIcon } from './Icons.jsx'
 import { PLAN_LABELS } from './entitlements.js'
 import { subscriptionSummary } from './PlansDialog.jsx'
 
+const LAST_LINK_KEY = 'proposio.lastMagicLink'
+const RESEND_WAIT_MS = 90 * 1000
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 function formatDateTime(iso) {
@@ -73,10 +76,27 @@ export function LoginDialog({ open, onClose, intro = '' }) {
       setError('Para crear o usar tu cuenta tienes que aceptar la política de privacidad.')
       return
     }
+    // Cada enlace gasta del cupo de emails del proyecto: se evita pedir varios seguidos
+    let last = 0
+    try {
+      last = Number(sessionStorage.getItem(LAST_LINK_KEY) || 0)
+    } catch {
+      // sin almacenamiento
+    }
+    const wait = Math.ceil((last + RESEND_WAIT_MS - Date.now()) / 1000)
+    if (wait > 0) {
+      setError(`Ya te hemos enviado un enlace. Revisa tu correo (también spam) o espera ${wait} s para pedir otro.`)
+      return
+    }
     setStatus('sending')
     setError(null)
     try {
       await sendMagicLink(value)
+      try {
+        sessionStorage.setItem(LAST_LINK_KEY, String(Date.now()))
+      } catch {
+        // sin almacenamiento: no pasa nada
+      }
       setStatus('sent')
     } catch (err) {
       setStatus('idle')
