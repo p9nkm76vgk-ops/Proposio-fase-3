@@ -10,6 +10,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import * as esbuild from 'esbuild'
+import { buildPages } from './pages.mjs'
 
 // Librerías que la versión publicada descarga de CDNs públicos, con versión fija.
 // Solo se descarga el código de la librería: ningún dato de las propuestas sale del navegador.
@@ -106,3 +107,5 @@ async function buildPage({ entry, template: templateFile, output }) {
 // app.html: el editor de propuestas.  ver.html: la página que ve el cliente al abrir un enlace.
 await buildPage({ entry: 'main.jsx', template: 'dev.html', output: 'app.html' })
 await buildPage({ entry: 'ver.jsx', template: 'ver-dev.html', output: 'ver.html' })
+// Páginas «Plantilla de presupuesto para…» y sitemap.xml
+buildPages()

@@ -39,7 +39,9 @@ Qué hay que saber:
 - Si cambias una propuesta ya enviada, el cliente sigue viendo la versión anterior hasta que pulses
   «Actualizar enlace con los cambios». Una propuesta aceptada ya no se puede cambiar (duplícala).
 - Enviar una propuesta cuenta en el límite mensual igual que descargarla (una vez por propuesta y mes).
-- Los avisos de aceptación aparecen al abrir o volver a la app (no hay notificaciones por email todavía).
+- Los avisos de aceptación aparecen al abrir o volver a la app. El aviso por email está preparado y se activa siguiendo `CONFIGURAR-CUENTAS.md` (secciones 11 y 12).
+- Cliente y profesional pueden descargar un **justificante de aceptación en PDF** (quién, cuándo, extras, total y huella de la versión).
+- **Páginas por profesión** para atraer visitas desde buscadores, enlazadas desde la página de inicio.
 
 ## Qué hace (implementado)
 
@@ -205,6 +207,10 @@ Todos los archivos están en la misma carpeta, sin subcarpetas.
 | `catalog.js`, `CatalogDialog.jsx` | Catálogo de servicios |
 | `rate.js`, `RateDialog.jsx` | Calculadora de precio mínimo por hora |
 | `samples.js` | Ejemplos por profesión |
+| `acceptance.js` | Justificante de aceptación en PDF |
+| `pages.mjs` | Genera las páginas «Plantilla de presupuesto para…» y `sitemap.xml` |
+| `presupuesto-*.html`, `sitemap.xml` | Páginas por profesión (generadas, no editar a mano) |
+| `edge-notify-acceptance.ts` | Función de servidor: email al profesional cuando su cliente acepta |
 
 ## Principios
 

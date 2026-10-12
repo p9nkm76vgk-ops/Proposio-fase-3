@@ -258,6 +258,7 @@ function toShare(row) {
     acceptedExtras: Array.isArray(row.accepted_extras) ? row.accepted_extras : [],
     acceptedTotalCents: row.accepted_total_cents === null || row.accepted_total_cents === undefined ? null : Number(row.accepted_total_cents),
     snapshot: row.snapshot ?? null, // solo con getShare(id, { withSnapshot: true })
+    pricing: row.pricing ?? null,
   }
 }
 
@@ -270,7 +271,7 @@ export function shareUrl(token) {
 /** Enlace de una propuesta (o null). Con withSnapshot, incluye la versión que ve el cliente. */
 export async function getShare(proposalId, { withSnapshot = false } = {}) {
   const client = await getUserClient()
-  const columns = withSnapshot ? `${SHARE_COLUMNS}, snapshot` : SHARE_COLUMNS
+  const columns = withSnapshot ? `${SHARE_COLUMNS}, snapshot, pricing` : SHARE_COLUMNS
   const row = unwrap(
     await client.from('shared_proposals').select(columns).eq('proposal_id', proposalId).maybeSingle(),
     'No se pudo consultar el enlace de la propuesta.',

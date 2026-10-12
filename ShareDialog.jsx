@@ -3,7 +3,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Modal } from './Feedback.jsx'
-import { CheckIcon, CopyIcon, Spinner } from './Icons.jsx'
+import { CheckIcon, CopyIcon, DownloadIcon, Spinner } from './Icons.jsx'
+import { downloadAcceptancePdf } from './acceptance.js'
+import { normalizeProposal } from './proposal.js'
 import { shareUrl } from './cloud.js'
 import { formatCents } from './format.js'
 import { isShareOutdated, mailtoUrl, shareMessage, whatsappUrl } from './sharing.js'
@@ -28,6 +30,8 @@ export function shareStatusText(share, viewTracking) {
 
 export function ShareDialog({ open, onClose, share, proposal, busy, error, entitlements, onUpdate, onSetActive, onOpenPlans }) {
   const [copied, setCopied] = useState(false)
+  const [proofBusy, setProofBusy] = useState(false)
+  const [proofError, setProofError] = useState('')
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -39,6 +43,31 @@ export function ShareDialog({ open, onClose, share, proposal, busy, error, entit
   const accepted = share?.status === 'accepted'
   const outdated = share && !accepted && isShareOutdated(share, proposal) === true
   const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+
+  const downloadProof = async () => {
+    setProofBusy(true)
+    setProofError('')
+    try {
+      const accepted = share.snapshot ? normalizeProposal(share.snapshot) : proposal
+      await downloadAcceptancePdf(
+        accepted,
+        {
+          name: share.acceptedName,
+          acceptedAt: share.acceptedAt,
+          extras: share.acceptedExtras,
+          totalCents: share.acceptedTotalCents,
+          sharedAt: share.sharedAt,
+          token: share.token,
+        },
+        share.pricing ?? {},
+        share.snapshot ?? accepted,
+      )
+    } catch (err) {
+      setProofError(err?.userMessage ?? 'No se pudo generar el justificante. Inténtalo de nuevo.')
+    } finally {
+      setProofBusy(false)
+    }
+  }
 
   const copy = async () => {
     try {
@@ -83,6 +112,15 @@ export function ShareDialog({ open, onClose, share, proposal, busy, error, entit
               )}
               {share.acceptedExtras.length > 0 && (
                 <p>Extras elegidos: {share.acceptedExtras.map((e) => `${e.concept} (+${formatCents(e.cents)})`).join(', ')}</p>
+              )}
+              <button type="button" className="button button--ghost button--small" onClick={downloadProof} disabled={proofBusy}>
+                {proofBusy ? <Spinner size={16} /> : <DownloadIcon size={16} />}
+                {proofBusy ? 'Generando…' : 'Descargar justificante de aceptación'}
+              </button>
+              {proofError && (
+                <p className="field__error" role="alert">
+                  {proofError}
+                </p>
               )}
               <p className="share__fine">
                 Lo aceptado ya no se puede cambiar. Si necesitas otra versión, usa «Duplicar» y envía la copia.

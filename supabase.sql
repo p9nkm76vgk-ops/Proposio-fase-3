@@ -421,6 +421,46 @@ revoke all on function public.delete_shared_on_proposal_delete()         from pu
 grant execute on function public.view_shared_proposal(text)                 to anon, authenticated;
 grant execute on function public.accept_shared_proposal(text, text, text[], timestamptz) to anon, authenticated;
 
+-- ─── Aviso por email al profesional cuando su cliente acepta ─────────────────
+-- La base de datos llama a la función de servidor notify-acceptance (edge-notify-acceptance.ts),
+-- que envía el email. Para activarlo:
+--   1. Despliega la función notify-acceptance (sin «Verify JWT») y configura sus secretos SMTP.
+--   2. Guarda en Vault la dirección de tus funciones (una sola vez):
+--      select vault.create_secret('https://TU_PROYECTO.supabase.co/functions/v1', 'proposio_functions_url');
+-- Si falta algo, no se envía nada y la aceptación funciona igual.
+create extension if not exists pg_net with schema extensions;
+
+alter table public.shared_proposals add column if not exists accepted_notified_at timestamptz;
+
+create or replace function public.notify_shared_accepted()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  functions_url text;
+begin
+  if new.status = 'accepted' and old.status is distinct from 'accepted' then
+    begin
+      select decrypted_secret into functions_url
+        from vault.decrypted_secrets where name = 'proposio_functions_url' limit 1;
+      if functions_url is not null then
+        perform net.http_post(
+          url := rtrim(functions_url, '/') || '/notify-acceptance',
+          body := jsonb_build_object('token', new.token),
+          headers := '{"Content-Type": "application/json"}'::jsonb
+        );
+      end if;
+    exception when others then
+      null; -- el aviso nunca impide aceptar una propuesta
+    end;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists shared_proposals_notify on public.shared_proposals;
+create trigger shared_proposals_notify after update on public.shared_proposals
+  for each row execute function public.notify_shared_accepted();
+
+revoke all on function public.notify_shared_accepted() from public, anon, authenticated;
+
 -- ─── Borrar la cuenta y todos sus datos (derecho de supresión) ────────────────
 -- Al borrar el usuario, sus propuestas, perfil y uso se borran en cascada.
 create or replace function public.delete_my_account()

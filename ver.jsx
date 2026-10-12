@@ -12,6 +12,7 @@ import * as cloud from './cloud.js'
 import { buildDocument } from './document.js'
 import { addDays, formatCents, formatLongDate, formatPercent, parseISODate } from './format.js'
 import { downloadProposalPdf } from './pdf.js'
+import { downloadAcceptancePdf } from './acceptance.js'
 import { totalWithExtras } from './pricing.js'
 import { normalizeProposal } from './proposal.js'
 import './styles.css'
@@ -188,7 +189,26 @@ function SharedProposal({ token, proposal, pricing, initialShare }) {
         </div>
         <aside className="viewer__side" id="aceptar" aria-label="Aceptar la propuesta">
           {share.status === 'accepted' ? (
-            <AcceptedCard share={share} professional={professional} contact={model.professional.contact} />
+            <AcceptedCard
+              share={share}
+              professional={professional}
+              contact={model.professional.contact}
+              onDownloadProof={() =>
+                downloadAcceptancePdf(
+                  proposal,
+                  {
+                    name: share.accepted_name,
+                    acceptedAt: share.accepted_at,
+                    extras: share.accepted_extras,
+                    totalCents: share.accepted_total_cents,
+                    sharedAt: share.shared_at,
+                    token,
+                  },
+                  pricing,
+                  initialShare.snapshot,
+                )
+              }
+            />
           ) : (
             <AcceptCard
               token={token}
@@ -314,7 +334,20 @@ function AcceptCard({ token, pricing, taxLabel, professional, version, expiry, e
   )
 }
 
-function AcceptedCard({ share, professional, contact }) {
+function AcceptedCard({ share, professional, contact, onDownloadProof }) {
+  const [busy, setBusy] = useState(false)
+  const [proofError, setProofError] = useState('')
+  const downloadProof = async () => {
+    setBusy(true)
+    setProofError('')
+    try {
+      await onDownloadProof()
+    } catch (err) {
+      setProofError(err?.userMessage ?? 'No se pudo generar el justificante. Inténtalo de nuevo.')
+    } finally {
+      setBusy(false)
+    }
+  }
   const acceptedAt = share.accepted_at ? new Date(share.accepted_at) : null
   const extras = Array.isArray(share.accepted_extras) ? share.accepted_extras : []
   return (
@@ -340,6 +373,15 @@ function AcceptedCard({ share, professional, contact }) {
           <span>Total acordado</span>
           <strong>{formatCents(share.accepted_total_cents)}</strong>
         </div>
+      )}
+      <button type="button" className="button button--ghost" onClick={downloadProof} disabled={busy}>
+        {busy ? <Spinner size={16} /> : <DownloadIcon size={16} />}
+        {busy ? 'Generando…' : 'Descargar justificante de aceptación'}
+      </button>
+      {proofError && (
+        <p className="field__error" role="alert">
+          {proofError}
+        </p>
       )}
       <p className="viewer-card__fine">
         {professional} ya puede ver que la has aceptado. Sigue los próximos pasos indicados en la propuesta

@@ -143,10 +143,39 @@ Es gratis.
 8. Edita `proposio-config.js` y cambia `googleLogin: false` por `googleLogin: true`. Guarda (Commit).
    En un par de minutos aparecerá **Continuar con Google** en la ventana de entrar.
 
-## 11. Email propio para el enlace de acceso (antes de abrir a mucha gente)
+## 11. Email propio sin coste: una cuenta de Gmail dedicada
 
-Para quien prefiera entrar con email, conecta un servicio de envío propio en
-**Authentication → Emails → SMTP Settings** y después sube el límite en **Authentication → Rate Limits**.
+Sirve para dos cosas: los enlaces de acceso por email (sin el límite por hora del servicio de prueba de
+Supabase) y el aviso «tu cliente ha aceptado». Es gratis; Gmail permite unos 500 envíos al día, de sobra
+para empezar. Cuando crezcas, se cambia por un servicio profesional (Brevo, Resend…) con dominio propio.
+
+1. Crea una cuenta de Gmail nueva solo para esto, por ejemplo `proposio.avisos@gmail.com`
+   (así no usas tu email personal).
+2. En esa cuenta, activa la **verificación en dos pasos** (myaccount.google.com → Seguridad).
+3. En myaccount.google.com/apppasswords crea una **contraseña de aplicación** llamada «proposio».
+   Google te enseña 16 letras: esa es la contraseña SMTP. No es la contraseña normal de la cuenta.
+
+**Enlaces de acceso:** Supabase → **Authentication → Emails → SMTP Settings** → activa **Custom SMTP**:
+- Sender email: la dirección de Gmail · Sender name: `proposio`
+- Host: `smtp.gmail.com` · Port: `465` · Username: la dirección de Gmail · Password: la contraseña de aplicación
+
+Después, en **Authentication → Rate Limits**, sube «Rate limit for sending emails» (por ejemplo, a 100 por hora).
+
+## 12. Aviso por email cuando un cliente acepta
+
+La base de datos ya está preparada (supabase.sql). Falta publicar la función y darle la contraseña:
+
+1. Supabase → **Edge Functions → Deploy a new function → Via Editor**, nombre `notify-acceptance`.
+   Pega el contenido de `edge-notify-acceptance.ts` y despliega. En sus ajustes, **desactiva «Verify JWT»**.
+2. **Edge Functions → Secrets**: añade `SMTP_USER` (la dirección de Gmail), `SMTP_PASS` (la contraseña de
+   aplicación) y `APP_URL` (la dirección de tu app).
+3. **SQL Editor**, una sola vez:
+   `select vault.create_secret('https://TU_PROYECTO.supabase.co/functions/v1', 'proposio_functions_url');`
+
+Mientras falte algo, no se envía nada y la aceptación funciona igual.
+
+## 13. Más adelante: servicio de email profesional y dominio
+
 Opciones con plan gratuito (comprueba sus condiciones actuales antes de elegir):
 
 - **Brevo**: unos 300 emails al día gratis.

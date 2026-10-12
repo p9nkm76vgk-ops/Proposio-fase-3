@@ -585,3 +585,32 @@ test('panel de negocio: cifras del mes, tasa y pendientes', async () => {
   assert.equal(computeDashboard([], now).acceptanceRate, null)
   assert.match(reminderMessage(shares[2], 'https://x.example/ver.html?p=1'), /«Web»[\s\S]*https:\/\/x\.example/)
 })
+
+test('justificante de aceptación: datos, desglose y huella', async () => {
+  const { acceptanceRecord, versionFingerprint, acceptanceFileName, renderAcceptancePdf, formatDateTimeLong } = await import('./acceptance.js')
+  const { pricingSummary } = await import('./pricing.js')
+  const p = createSampleProposal()
+  p.extras = [{ id: 'e1', concept: 'Fotos', price: '300' }]
+  const pricing = pricingSummary(p)
+  const r = acceptanceRecord(
+    p,
+    { name: 'Jorge Ruiz', acceptedAt: '2026-10-12T19:31:00Z', extras: [{ id: 'e1', concept: 'Fotos', cents: 30000 }], totalCents: 292820, sharedAt: '2026-10-12T19:00:00Z', token: '0123456789abcdef0123456789abcdef' },
+    pricing,
+    { timeZone: 'Europe/Madrid' },
+  )
+  assert.equal(r.acceptedBy, 'Jorge Ruiz')
+  assert.equal(r.acceptedAt, '12 de octubre de 2026, 21:31 (hora de Madrid)')
+  assert.deepEqual(r.rows.map((x) => x.value), ['2.120,00 €', '+300,00 €', '508,20 €'])
+  assert.equal(r.total, '2.928,20 €')
+  assert.equal(r.reference, '…89abcdef') // nunca el código completo del enlace
+  assert.equal(formatDateTimeLong('no es fecha'), '')
+  const reordered = JSON.parse(JSON.stringify(p, Object.keys(p).reverse()))
+  assert.equal(await versionFingerprint(p), await versionFingerprint({ ...reordered, ...p }))
+  assert.match(await versionFingerprint(p), /^[0-9a-f]{64}$/)
+  assert.match(acceptanceFileName(p), /^justificante-aceptacion-panaderia-la-espiga-/)
+  // Se puede dibujar sin errores
+  const calls = []
+  const fake = new Proxy({}, { get: (_, k) => (k === 'splitTextToSize' ? (t) => [t] : (...a) => calls.push([k, ...a])) })
+  renderAcceptancePdf(fake, r, 'abc')
+  assert.ok(calls.some(([k, t]) => k === 'text' && t === 'Total aceptado'))
+})

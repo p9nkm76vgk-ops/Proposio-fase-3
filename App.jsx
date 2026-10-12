@@ -297,7 +297,7 @@ export default function App() {
         setToast({ type: 'success', message: acceptanceToast(fresh) })
         // Si la propuesta abierta es una de ellas, se actualiza su estado
         const open = fresh.find((sh) => sh.proposalId === proposalRef.current.id)
-        if (open) setShareState((prev) => (prev.proposalId === open.proposalId ? { ...prev, share: { ...prev.share, ...open, snapshot: prev.share?.snapshot ?? null } } : prev))
+        if (open) setShareState((prev) => (prev.proposalId === open.proposalId ? { ...prev, share: { ...prev.share, ...open, snapshot: prev.share?.snapshot ?? null, pricing: prev.share?.pricing ?? null } } : prev))
       }
     } catch {
       // Sin conexión: se intentará en la próxima visita a la pestaña
@@ -320,6 +320,17 @@ export default function App() {
       window.removeEventListener('focus', onFocus)
     }
   }, [account, profileReadyFor, refreshShares])
+
+  // Enlace desde una página de plantilla (app.html?ejemplo=photo): carga ese ejemplo
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const id = params.get('ejemplo')
+    if (!id) return
+    params.delete('ejemplo')
+    const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`
+    window.history.replaceState(null, '', clean)
+    if (SAMPLE_PROFESSIONS.some((s) => s.id === id)) loadSample(id)
+  }, [])
 
   // Enlace «Entrar» de la página de inicio (app.html?entrar=1): abre la ventana de acceso
   useEffect(() => {

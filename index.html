@@ -9,6 +9,7 @@
       content="Crea propuestas comerciales profesionales en minutos: rellena los datos del proyecto, revisa el documento y descárgalo en PDF. Para autónomos, freelancers y pequeños negocios."
     />
     <meta name="theme-color" content="#20375a" />
+    <link rel="canonical" href="https://p9nkm76vgk-ops.github.io/Proposio-fase-3/" />
     <meta property="og:title" content="proposio · Propuestas comerciales en minutos" />
     <meta property="og:description" content="Rellena los datos de tu proyecto, revisa el documento y descárgalo en PDF." />
     <meta property="og:type" content="website" />
@@ -428,6 +429,31 @@
         display: none !important;
       }
 
+      /* Plantillas por profesión */
+      .templates {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .templates a {
+        display: block;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        color: var(--ink);
+        font-weight: 650;
+        text-decoration: none;
+      }
+
+      .templates a:hover {
+        border-color: var(--navy);
+      }
+
       /* Planes */
       .plans {
         display: grid;
@@ -707,7 +733,7 @@
           <a href="#preguntas">Preguntas</a>
         </nav>
         <a class="button button--plain" href="app.html?entrar=1" data-show="accounts" hidden>Entrar</a>
-        <a class="button button--primary" href="app.html">Abrir<span class="hide-xs"> proposio</span></a>
+        <a class="button button--primary" href="app.html">Abrir<span class="hide-xs">&nbsp;proposio</span></a>
       </div>
     </header>
 
@@ -870,6 +896,20 @@
         </div>
       </section>
 
+      <section class="block" id="plantillas">
+        <div class="wrap">
+          <h2>Plantillas por profesión</h2>
+          <p class="intro">Empieza desde un ejemplo completo de tu sector y cámbialo por tus datos.</p>
+          <ul class="templates">
+            <li><a href="presupuesto-diseno-web.html">Presupuesto de diseño web</a></li>
+            <li><a href="presupuesto-fotografia.html">Presupuesto de fotografía</a></li>
+            <li><a href="presupuesto-desarrollo-software.html">Presupuesto de desarrollo de software</a></li>
+            <li><a href="presupuesto-consultoria.html">Propuesta de consultoría</a></li>
+            <li><a href="presupuesto-marketing-redes-sociales.html">Presupuesto de gestión de redes sociales</a></li>
+          </ul>
+        </div>
+      </section>
+
       <section class="block block--paper" id="planes">
         <div class="wrap">
           <h2>Planes</h2>
@@ -962,6 +1002,7 @@
     <footer>
       <div class="wrap">
         <span class="grow">proposio</span>
+        <a href="#plantillas">Plantillas</a>
         <a href="privacidad.html">Privacidad</a>
         <a href="condiciones.html">Condiciones</a>
       </div>
