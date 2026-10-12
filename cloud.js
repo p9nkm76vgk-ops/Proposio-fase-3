@@ -30,6 +30,33 @@ function getClient() {
   return clientPromise
 }
 
+// ─── Sesión perdida ──────────────────────────────────────────────────────────
+// Si el navegador pierde la sesión (por ejemplo, porque no guarda datos de la web), las
+// peticiones llegarían al servidor sin identificar y fallarían. Se detecta antes de enviar
+// nada y se avisa a la app para que pida entrar de nuevo, en vez de fallar en silencio.
+const sessionLostListeners = new Set()
+
+export function onSessionLost(callback) {
+  sessionLostListeners.add(callback)
+  return () => sessionLostListeners.delete(callback)
+}
+
+function sessionLost() {
+  sessionLostListeners.forEach((cb) => cb())
+  const e = new Error('no_session')
+  e.noSession = true
+  e.userMessage = 'Tu sesión se ha cerrado en este navegador. Vuelve a entrar con tu email.'
+  return e
+}
+
+/** Cliente con la sesión del usuario comprobada (para leer o guardar sus datos). */
+async function getUserClient() {
+  const client = await getClient()
+  const { data, error } = await client.auth.getSession()
+  if (error || !data?.session?.access_token) throw sessionLost()
+  return client
+}
+
 /** Error con un mensaje en español para mostrar al usuario. */
 function friendly(error, userMessage) {
   const e = error instanceof Error ? error : new Error(error?.message ?? String(error))
@@ -38,8 +65,10 @@ function friendly(error, userMessage) {
 }
 
 /** Comprueba la respuesta de Supabase ({ data, error }) y devuelve data. */
-function unwrap({ data, error }, userMessage) {
+function unwrap({ data, error, status }, userMessage) {
   if (error) {
+    // 401 / 42501: el servidor no reconoce la sesión
+    if (status === 401 || error.code === '42501' || /JWT|permission denied/i.test(error.message ?? '')) throw sessionLost()
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false
     throw friendly(new Error(error.message || 'Error del servidor'), offline ? 'No hay conexión a internet.' : userMessage)
   }
@@ -89,7 +118,7 @@ export async function signOut() {
 // ─── Propuestas ──────────────────────────────────────────────────────────────
 
 export async function listProposals() {
-  const client = await getClient()
+  const client = await getUserClient()
   const rows = unwrap(
     await client.from('proposals').select('id, title, client_name, updated_at').order('updated_at', { ascending: false }),
     'No se pudieron cargar tus propuestas.',
@@ -98,7 +127,7 @@ export async function listProposals() {
 }
 
 export async function fetchProposal(id) {
-  const client = await getClient()
+  const client = await getUserClient()
   const row = unwrap(await client.from('proposals').select('data').eq('id', id).maybeSingle(), 'No se pudo abrir la propuesta.')
   if (!row) throw friendly(new Error('not_found'), 'Esa propuesta ya no existe.')
   const proposal = normalizeProposal({ ...row.data, id })
@@ -107,7 +136,7 @@ export async function fetchProposal(id) {
 }
 
 export async function saveProposal(account, proposal) {
-  const client = await getClient()
+  const client = await getUserClient()
   unwrap(
     await client.from('proposals').upsert(
       {
@@ -124,14 +153,14 @@ export async function saveProposal(account, proposal) {
 }
 
 export async function deleteProposal(id) {
-  const client = await getClient()
+  const client = await getUserClient()
   unwrap(await client.from('proposals').delete().eq('id', id), 'No se pudo eliminar la propuesta.')
 }
 
 // ─── Perfil: tus datos, diseño y textos guardados ────────────────────────────
 
 export async function fetchProfile() {
-  const client = await getClient()
+  const client = await getUserClient()
   const row = unwrap(
     await client.from('profiles').select('professional, design, snippets, catalog, pricing_settings').maybeSingle(),
     'No se pudieron cargar tus datos.',
@@ -151,7 +180,7 @@ export async function fetchProfile() {
 
 /** Guarda solo las columnas indicadas: { professional?, design?, snippets?, catalog?, pricing_settings? } */
 export async function saveProfile(account, columns) {
-  const client = await getClient()
+  const client = await getUserClient()
   unwrap(
     await client.from('profiles').upsert({ user_id: account.userId, ...columns }, { onConflict: 'user_id' }),
     'No se pudieron guardar tus datos en la cuenta.',
@@ -187,13 +216,13 @@ function toUsage(data) {
 }
 
 export async function fetchUsage(proposalId) {
-  const client = await getClient()
+  const client = await getUserClient()
   return toUsage(unwrap(await client.rpc('get_usage', { p_proposal_id: proposalId }), 'No se pudo consultar tu uso del mes.'))
 }
 
 /** Pide permiso al servidor para descargar. Devuelve { allowed, usage }. */
 export async function registerExport(proposalId) {
-  const client = await getClient()
+  const client = await getUserClient()
   const data = unwrap(await client.rpc('register_export', { p_proposal_id: proposalId }), 'No se pudo comprobar tu límite mensual.')
   return { allowed: Boolean(data?.allowed), usage: toUsage(data) }
 }
@@ -232,7 +261,7 @@ export function shareUrl(token) {
 
 /** Enlace de una propuesta (o null). Con withSnapshot, incluye la versión que ve el cliente. */
 export async function getShare(proposalId, { withSnapshot = false } = {}) {
-  const client = await getClient()
+  const client = await getUserClient()
   const columns = withSnapshot ? `${SHARE_COLUMNS}, snapshot` : SHARE_COLUMNS
   const row = unwrap(
     await client.from('shared_proposals').select(columns).eq('proposal_id', proposalId).maybeSingle(),
@@ -242,7 +271,7 @@ export async function getShare(proposalId, { withSnapshot = false } = {}) {
 }
 
 export async function listShares() {
-  const client = await getClient()
+  const client = await getUserClient()
   const rows = unwrap(
     await client.from('shared_proposals').select(SHARE_COLUMNS).order('shared_at', { ascending: false }),
     'No se pudieron cargar tus propuestas enviadas.',
@@ -255,7 +284,7 @@ export async function listShares() {
  * Requisito del servidor: la propuesta debe haber contado ya en el cupo (registerExport).
  */
 export async function shareProposal(account, snapshot, pricing) {
-  const client = await getClient()
+  const client = await getUserClient()
   const fields = {
     title: (snapshot.project?.title ?? '').slice(0, 200),
     client_name: (snapshot.client?.name ?? '').slice(0, 200),
@@ -279,7 +308,7 @@ export async function shareProposal(account, snapshot, pricing) {
 }
 
 export async function setShareActive(proposalId, active) {
-  const client = await getClient()
+  const client = await getUserClient()
   unwrap(
     await client.from('shared_proposals').update({ revoked: !active }).eq('proposal_id', proposalId),
     active ? 'No se pudo activar el enlace.' : 'No se pudo desactivar el enlace.',
@@ -291,7 +320,9 @@ export async function setShareActive(proposalId, active) {
 
 export async function viewSharedProposal(token) {
   const client = await getClient()
-  return unwrap(await client.rpc('view_shared_proposal', { p_token: token }), 'No se pudo cargar la propuesta.')
+  const { data, error } = await client.rpc('view_shared_proposal', { p_token: token })
+  if (error) throw friendly(new Error(error.message), 'No se pudo cargar la propuesta. Comprueba tu conexión y vuelve a intentarlo.')
+  return data
 }
 
 /** version: fecha de envío (shared_at) de la versión que está viendo el cliente. */

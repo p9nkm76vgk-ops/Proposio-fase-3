@@ -131,6 +131,23 @@ export default function App() {
     }
   }, [])
 
+  // Si el navegador pierde la sesión, se vuelve al modo sin cuenta y se pide entrar de nuevo.
+  // La propuesta abierta no se pierde: también está guardada en este navegador.
+  useEffect(() => {
+    if (!cloud.cloudEnabled) return undefined
+    return cloud.onSessionLost(() => {
+      if (!accountRef.current) return
+      setAccount(null)
+      hadAccountAtStart.current = false
+      setCloudSave('idle')
+      setDialog({
+        kind: 'login',
+        intro:
+          'Tu sesión se ha cerrado en este navegador y no se pudo guardar en tu cuenta. Vuelve a entrar: tu propuesta sigue aquí. Si usas el navegador de la app de Google o de Gmail, abre el enlace del email en Safari o Chrome.',
+      })
+    })
+  }, [])
+
   // Al entrar: cargar tu perfil de la cuenta (o crearlo con lo que hay en este navegador)
   useEffect(() => {
     if (!account) {
