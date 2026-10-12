@@ -8,7 +8,8 @@
 // secreto de un enlace que YA está aceptado y que aún no se ha avisado; marca el aviso en la
 // base de datos antes de enviar, así que cada aceptación genera como mucho un email.
 //
-// Envío: por SMTP (por ejemplo, una cuenta de Gmail con «contraseña de aplicación»).
+// Envío: por SMTP con SSL (por ejemplo, una cuenta de Gmail con «contraseña de aplicación»),
+// sin librerías externas.
 // Secretos necesarios (Supabase → Edge Functions → Secrets):
 //   SMTP_USER   la dirección de email (obligatorio)
 //   SMTP_PASS   la contraseña de aplicación, no la contraseña normal (obligatorio)
@@ -81,17 +82,107 @@ ${appUrl ? `<p style="margin:16px 0"><a href="${esc(appUrl)}" style="display:inl
   return { from, to, subject: `🎉 ${who} ha aceptado «${title}»`, text: lines.join('\n'), html }
 }
 
-/** Envío real por SMTP (SSL, puerto 465). */
-async function smtpSend(env: Env, mail: Mail): Promise<void> {
-  // @ts-ignore: importación de npm en el entorno Deno de Supabase
-  const nodemailer = (await import('npm:nodemailer@6.9.16')).default
-  const transport = nodemailer.createTransport({
-    host: env('SMTP_HOST') || 'smtp.gmail.com',
-    port: Number(env('SMTP_PORT') || 465),
-    secure: true,
-    auth: { user: env('SMTP_USER'), pass: env('SMTP_PASS') },
-  })
-  await transport.sendMail(mail)
+/** Codifica texto UTF-8 en base64 (líneas de 76 caracteres para el cuerpo del email). */
+function b64(text: string, wrap = false): string {
+  const bytes = new TextEncoder().encode(text)
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  const out = btoa(bin)
+  return wrap ? out.replace(/.{1,76}/g, '$&\r\n').trimEnd() : out
+}
+
+/** Mensaje MIME (texto + HTML) listo para enviar por SMTP. */
+export function buildMime(mail: Mail, now = new Date()): string {
+  const boundary = `proposio-${crypto.randomUUID()}`
+  const addr = (s: string) => (s.match(/<([^>]+)>/)?.[1] ?? s).trim()
+  const fromName = mail.from.includes('<') ? mail.from.split('<')[0].trim().replace(/^"|"$/g, '') : ''
+  const domain = addr(mail.from).split('@')[1] ?? 'localhost'
+  return [
+    `From: ${fromName ? `=?UTF-8?B?${b64(fromName)}?= ` : ''}<${addr(mail.from)}>`,
+    `To: <${addr(mail.to)}>`,
+    `Subject: =?UTF-8?B?${b64(mail.subject)}?=`,
+    `Date: ${now.toUTCString()}`,
+    `Message-ID: <${crypto.randomUUID()}@${domain}>`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+    '',
+    b64(mail.text, true),
+    `--${boundary}`,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+    '',
+    b64(mail.html, true),
+    `--${boundary}--`,
+    '',
+  ].join('\r\n')
+}
+
+/**
+ * Envío por SMTP con SSL (puerto 465), sin librerías externas: EHLO, AUTH LOGIN, MAIL, RCPT, DATA.
+ * Usa Deno.connectTls (solo existe en el servidor de Supabase).
+ */
+export async function smtpSend(env: Env, mail: Mail): Promise<void> {
+  // @ts-ignore: Deno solo existe en el servidor
+  const conn = await Deno.connectTls({ hostname: env('SMTP_HOST') || 'smtp.gmail.com', port: Number(env('SMTP_PORT') || 465) })
+  const enc = new TextEncoder()
+  const dec = new TextDecoder()
+  let buffer = ''
+  const readReply = async (): Promise<string> => {
+    // Una respuesta termina en una línea «NNN texto» (sin guion tras el código)
+    while (true) {
+      const lines = buffer.split('\r\n')
+      for (let i = 0; i < lines.length - 1; i += 1) {
+        if (/^\d{3} /.test(lines[i])) {
+          const reply = lines.slice(0, i + 1).join('\n')
+          buffer = lines.slice(i + 1).join('\r\n')
+          return reply
+        }
+      }
+      const chunk = new Uint8Array(4096)
+      const n = await conn.read(chunk)
+      if (n === null) throw new Error('smtp_closed')
+      buffer += dec.decode(chunk.subarray(0, n))
+    }
+  }
+  const expect = async (code: string) => {
+    const reply = await readReply()
+    if (!reply.split('\n').pop()!.startsWith(code)) throw new Error(`smtp_${code}: ${reply.slice(0, 200)}`)
+  }
+  // write() puede escribir solo una parte: se repite hasta enviarlo todo
+  const writeAll = async (text: string) => {
+    const data = enc.encode(text)
+    let offset = 0
+    while (offset < data.length) offset += await conn.write(data.subarray(offset))
+  }
+  const send = async (line: string, code: string) => {
+    await writeAll(`${line}\r\n`)
+    await expect(code)
+  }
+  const addr = (s: string) => (s.match(/<([^>]+)>/)?.[1] ?? s).trim()
+  try {
+    await expect('220')
+    await send('EHLO proposio', '250')
+    await send('AUTH LOGIN', '334')
+    await send(b64(env('SMTP_USER')), '334')
+    await send(b64(env('SMTP_PASS')), '235')
+    await send(`MAIL FROM:<${addr(mail.from)}>`, '250')
+    await send(`RCPT TO:<${addr(mail.to)}>`, '250')
+    await send('DATA', '354')
+    // Las líneas que empiezan por «.» se duplican (regla de SMTP)
+    const body = buildMime(mail).replace(/\r\n\./g, '\r\n..')
+    await send(`${body}\r\n.`, '250')
+    await writeAll('QUIT\r\n').catch(() => {})
+  } finally {
+    try {
+      conn.close()
+    } catch {
+      // ya cerrada
+    }
+  }
 }
 
 export function createHandler({ env, fetch: fetchFn, sendMail = smtpSend }: Deps) {
