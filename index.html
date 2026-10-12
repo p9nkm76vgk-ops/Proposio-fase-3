@@ -626,6 +626,23 @@
           display: none;
         }
 
+        .top .wrap {
+          gap: 10px;
+        }
+
+        .top .button {
+          padding: 0 12px;
+          font-size: 14px;
+        }
+
+        .top .brand {
+          margin-right: auto;
+        }
+
+        .top .hide-xs {
+          display: none;
+        }
+
         .hero {
           padding-block: 28px 64px;
         }
@@ -689,7 +706,8 @@
           <a href="#planes">Planes</a>
           <a href="#preguntas">Preguntas</a>
         </nav>
-        <a class="button button--primary" href="app.html">Abrir proposio</a>
+        <a class="button button--plain" href="app.html?entrar=1" data-show="accounts" hidden>Entrar</a>
+        <a class="button button--primary" href="app.html">Abrir<span class="hide-xs"> proposio</span></a>
       </div>
     </header>
 

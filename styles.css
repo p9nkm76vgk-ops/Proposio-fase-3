@@ -3107,3 +3107,15 @@ a.brand {
     padding: 10px 16px;
   }
 }
+
+/* «Entrar» se ve siempre con su texto (en tablet y móvil los demás botones son solo iconos) */
+.app-header .header-button.header-button--labeled {
+  width: auto;
+  padding: 0 12px;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.app-header .header-button--labeled .header-button__label {
+  display: inline;
+}

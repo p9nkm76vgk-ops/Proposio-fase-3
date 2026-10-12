@@ -39,10 +39,16 @@ export function UsageMeter({ usage, account, plan = 'free', onOpenPlans }) {
   )
 }
 
-/** Botón secundario: en pantallas pequeñas muestra solo el icono (con nombre accesible). */
-function HeaderButton({ icon, label, onClick }) {
+/** Botón secundario: en pantallas pequeñas muestra solo el icono (con nombre accesible), salvo alwaysLabel. */
+function HeaderButton({ icon, label, onClick, alwaysLabel = false }) {
   return (
-    <button type="button" className="button button--ghost header-button" onClick={onClick} aria-label={label} title={label}>
+    <button
+      type="button"
+      className={`button button--ghost header-button ${alwaysLabel ? 'header-button--labeled' : ''}`}
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+    >
       {icon}
       <span className="header-button__label" aria-hidden="true">
         {label}
@@ -84,7 +90,7 @@ export function AppHeader({
           {cloudEnabled && account && <HeaderButton icon={<ChartIcon />} label="Panel" onClick={onOpenDashboard} />}
           {cloudEnabled && account && <HeaderButton icon={<FolderIcon />} label="Mis propuestas" onClick={onOpenProposals} />}
           {cloudEnabled && account && <HeaderButton icon={<UserIcon />} label="Mi cuenta" onClick={onOpenAccount} />}
-          {cloudEnabled && !account && <HeaderButton icon={<LoginIcon />} label="Entrar" onClick={onLogin} />}
+          {cloudEnabled && !account && <HeaderButton icon={<LoginIcon />} label="Entrar" onClick={onLogin} alwaysLabel />}
           <button
             type="button"
             className="button button--primary"

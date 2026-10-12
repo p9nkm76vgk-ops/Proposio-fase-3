@@ -304,6 +304,20 @@ export default function App() {
     }
   }, [account, profileReadyFor, refreshShares])
 
+  // Enlace «Entrar» de la página de inicio (app.html?entrar=1): abre la ventana de acceso
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (!params.has('entrar')) return
+    params.delete('entrar')
+    const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`
+    window.history.replaceState(null, '', clean)
+    if (!cloud.cloudEnabled) return
+    cloud
+      .getAccount()
+      .then((a) => !a && setDialog({ kind: 'login' }))
+      .catch(() => setDialog({ kind: 'login' }))
+  }, [])
+
   // Vuelta desde la página de pago de Stripe (?pago=ok | ?pago=cancelado)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
