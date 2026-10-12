@@ -20,6 +20,10 @@ window.PROPOSIO_CONFIG = {
   supabaseUrl: 'https://lyovhyfnhurjdoepnnte.supabase.co',
   supabaseAnonKey: 'sb_publishable_x3GrXuxI4vPXhozKGGIu8w_EE6CuB5q',
 
+  // Botón «Continuar con Google». Ponlo en true SOLO cuando hayas activado Google en
+  // Supabase (Authentication → Sign In / Providers → Google). Ver CONFIGURAR-CUENTAS.md.
+  googleLogin: false,
+
   payments: {
     enabled: false,
     priceNote: '',

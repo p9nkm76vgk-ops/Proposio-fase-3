@@ -110,3 +110,47 @@ No lo compres todavía: primero prueba la app tú mismo con tu email.
    propuesta. Acéptala con un nombre de prueba. Vuelve a la app y recarga: debe aparecer el aviso de aceptación.
 
 Si algo falla, abre la consola del navegador (F12 → Consola) y mándame el mensaje en rojo.
+
+
+## 10. Entrar con Google (recomendado: sin límite de emails)
+
+El email de acceso gratuito de Supabase solo permite **unos pocos envíos por hora en todo el proyecto**.
+Con «Continuar con Google» no se envía ningún email, así que ese límite deja de afectar a quien entre así.
+Es gratis.
+
+**En Google Cloud** (https://console.cloud.google.com, con tu cuenta de Google):
+
+1. Crea un proyecto nuevo, por ejemplo «proposio».
+2. Abre **Google Auth Platform** y completa **Branding** (nombre «proposio», tu email de contacto) y
+   **Audience** (tipo **External**). Puedes publicarla sin verificar: los usuarios verán un aviso de
+   Google la primera vez; la verificación (gratuita, tarda unos días) lo quita.
+3. En **Data Access** deja los permisos básicos: `openid`, email y perfil. No añadas otros.
+4. En **Clients → Create client**, tipo **Web application**:
+   - **Authorized JavaScript origins**: `https://p9nkm76vgk-ops.github.io`
+   - **Authorized redirect URIs**: `https://lyovhyfnhurjdoepnnte.supabase.co/auth/v1/callback`
+5. Copia el **Client ID** y el **Client secret**. El secret es SECRETO: no lo pegues en GitHub ni en
+   `proposio-config.js`.
+
+**En Supabase:**
+
+6. **Authentication → Sign In / Providers → Google**: activa **Enable**, pega el Client ID y el Client
+   secret y guarda.
+7. Comprueba que en **Authentication → URL Configuration → Redirect URLs** está la dirección de la app
+   (`https://p9nkm76vgk-ops.github.io/Proposio-fase-3/app.html`).
+
+**En GitHub:**
+
+8. Edita `proposio-config.js` y cambia `googleLogin: false` por `googleLogin: true`. Guarda (Commit).
+   En un par de minutos aparecerá **Continuar con Google** en la ventana de entrar.
+
+## 11. Email propio para el enlace de acceso (antes de abrir a mucha gente)
+
+Para quien prefiera entrar con email, conecta un servicio de envío propio en
+**Authentication → Emails → SMTP Settings** y después sube el límite en **Authentication → Rate Limits**.
+Opciones con plan gratuito (comprueba sus condiciones actuales antes de elegir):
+
+- **Brevo**: unos 300 emails al día gratis.
+- **Resend**: unos 100 emails al día y 3.000 al mes gratis.
+
+Ambos piden verificar un **dominio propio** (aprox. 10–15 € al año) para enviar a cualquier persona con
+buena entrega. Cuando el volumen crezca, sus planes de pago empiezan en torno a 9–20 $ al mes.

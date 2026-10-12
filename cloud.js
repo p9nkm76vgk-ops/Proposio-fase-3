@@ -104,10 +104,18 @@ export async function sendMagicLink(email) {
     throw friendly(
       new Error(error.message),
       rateLimited
-        ? 'Se han enviado demasiados enlaces. Espera unos minutos y vuelve a intentarlo.'
+        ? 'Ahora mismo no se pueden enviar más enlaces por email. Espera un rato y vuelve a intentarlo, o entra con Google si está disponible.'
         : 'No se pudo enviar el enlace. Revisa el email y vuelve a intentarlo.',
     )
   }
+}
+
+/** Entrar con Google: lleva a la página de Google y vuelve a la app con la sesión iniciada. */
+export async function signInWithGoogle() {
+  const client = await getClient()
+  const redirectTo = `${window.location.origin}${window.location.pathname}`
+  const { error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
+  if (error) throw friendly(new Error(error.message), 'No se pudo abrir el acceso con Google. Inténtalo de nuevo o entra con tu email.')
 }
 
 export async function signOut() {

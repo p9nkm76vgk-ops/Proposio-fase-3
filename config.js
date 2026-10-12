@@ -65,3 +65,7 @@ function readPayments() {
 }
 
 export const PAYMENTS = readPayments()
+
+// Entrar con Google: solo se muestra si está activado aquí Y configurado en Supabase
+// (Authentication → Sign In / Providers → Google). Ver CONFIGURAR-CUENTAS.md.
+export const GOOGLE_LOGIN = runtime.googleLogin === true && Boolean(config.url && config.key)

@@ -3119,3 +3119,33 @@ a.brand {
 .app-header .header-button--labeled .header-button__label {
   display: inline;
 }
+
+/* Botón «Continuar con Google» (estilo neutro, según las normas de marca de Google) */
+.button--google {
+  width: 100%;
+  min-height: 44px;
+  background: #fff;
+  border: 1px solid var(--color-border-strong);
+  color: #1f1f1f;
+}
+
+.button--google:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.login-form__or {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.login-form__or::before,
+.login-form__or::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
