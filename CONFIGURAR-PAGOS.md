@@ -95,7 +95,7 @@ suscripciones y los límites por plan; se puede ejecutar varias veces sin perder
 
 ## 9. Completa las condiciones y activa los pagos en la web
 
-1. Completa `condiciones.html` (datos marcados en amarillo) y borra el aviso de borrador.
+1. Completa el aviso legal (NIF y domicilio en `legal.mjs`), redacta las condiciones de contratación y añade el proveedor de pagos a la Política de Privacidad.
    Revísalo con tu gestoría.
 2. En `proposio-config.js`, cambia `enabled: false` por `enabled: true` dentro de `payments`.
    Revisa que los precios coinciden con los de Stripe y, si quieres, rellena `priceNote`

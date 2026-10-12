@@ -11,6 +11,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import * as esbuild from 'esbuild'
 import { buildPages } from './pages.mjs'
+import { buildLegal } from './legal.mjs'
 
 // Librerías que la versión publicada descarga de CDNs públicos, con versión fija.
 // Solo se descarga el código de la librería: ningún dato de las propuestas sale del navegador.
@@ -109,3 +110,5 @@ await buildPage({ entry: 'main.jsx', template: 'dev.html', output: 'app.html' })
 await buildPage({ entry: 'ver.jsx', template: 'ver-dev.html', output: 'ver.html' })
 // Páginas «Plantilla de presupuesto para…» y sitemap.xml
 buildPages()
+// Aviso legal, Política de Privacidad, Condiciones de Uso y Política de cookies
+buildLegal()

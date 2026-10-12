@@ -14,10 +14,11 @@ Revisa los límites actuales en la web de Supabase antes de lanzar: pueden cambi
 
 ---
 
-## 1. Completa la política de privacidad
+## 1. Revisa los textos legales
 
-Revisa `privacidad.html`: debe indicar quién es el responsable y un email de contacto, y la región
-del servidor que elijas. Conviene que la revise un profesional antes de abrir la app al público.
+Los textos legales se generan desde `legal.mjs` (titular, email de contacto y región del servidor).
+Si cambias algo, edítalo ahí y ejecuta `npm run build`. Conviene que los revise un profesional antes de
+abrir la app al público.
 
 ## 2. Crea el proyecto en Supabase
 

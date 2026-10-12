@@ -1,208 +1,264 @@
 <!doctype html>
 <html lang="es">
   <head>
+    <!-- ARCHIVO GENERADO con "node legal.mjs" (o "npm run build"). Para cambiar el texto, edita legal.mjs. -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex" />
-    <title>Política de privacidad · proposio</title>
+    <title>Política de Privacidad · proposio</title>
+    <meta name="description" content="Cómo trata proposio tus datos personales y cómo ejercer tus derechos." />
+    <meta name="theme-color" content="#20375a" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23fff%22/%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M29%207%20L12.5%2023.5%20Q9%2027%2012.5%2030.5%20L19.5%2037.5%22%20stroke%3D%22%2320375A%22%20stroke-width%3D%226.5%22/%3E%3Cpath%20d%3D%22M35%2013%20L51.5%2029.5%20Q55%2033%2051.5%2036.5%20L37%2051%22%20stroke%3D%22%234A90BA%22%20stroke-width%3D%226.5%22/%3E%3Cpath%20d%3D%22M13%2054%20L39%2028%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2212%22/%3E%3Cpath%20d%3D%22M13%2054%20L39%2028%22%20stroke%3D%22%2320375A%22%20stroke-width%3D%226.5%22/%3E%3C/g%3E%3Cpath%20d%3D%22M30%2022%20H45%20V37%20Z%22%20fill%3D%22%2320375A%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223%22%20stroke-linejoin%3D%22round%22%20paint-order%3D%22stroke%22/%3E%3C/svg%3E" />
     <style>
-      :root {
-        --ink: #111e30;
-        --text: #374151;
-        --muted: #5f6b7a;
-        --accent: #20375a;
-        --line: #dde3e8;
-        --todo-bg: #fff4d6;
-        --todo-text: #7a4b00;
-      }
-      body {
-        margin: 0;
-        background: #f4f6f7;
-        color: var(--text);
-        font: 16px/1.65 system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-      }
-      main {
-        max-width: 760px;
-        margin: 0 auto;
-        padding: 40px 20px 64px;
-      }
-      article {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 36px clamp(20px, 5vw, 48px);
-      }
-      h1 {
-        color: var(--ink);
-        font-size: 30px;
-        line-height: 1.2;
-        margin: 0 0 6px;
-      }
-      h2 {
-        color: var(--ink);
-        font-size: 19px;
-        margin: 32px 0 8px;
-      }
-      p,
-      ul {
-        margin: 0 0 12px;
-      }
-      li + li {
-        margin-top: 4px;
-      }
-      a {
-        color: var(--accent);
-      }
-      .meta {
-        color: var(--muted);
-        font-size: 14px;
-      }
-      .todo {
-        background: var(--todo-bg);
-        color: var(--todo-text);
-        padding: 0 4px;
-        border-radius: 4px;
-        font-weight: 600;
-      }
-      .draft-notice {
-        border: 1px solid #f0d28a;
-        background: var(--todo-bg);
-        color: var(--todo-text);
-        border-radius: 10px;
-        padding: 12px 14px;
-        margin-bottom: 24px;
-        font-size: 14px;
-      }
-      .back {
-        display: inline-block;
-        margin-bottom: 16px;
-        font-weight: 600;
-        text-decoration: none;
-      }
-    </style>
+:root{--navy:#20375a;--blue:#4a90ba;--ground:#eef2f6;--paper:#fff;--ink:#17212f;--text:#3a4554;--muted:#637084;--line:#d6dee7;--warn-bg:#fff4d6;--warn:#7a4b00;
+--sans:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;--serif:Charter,'Bitstream Charter','Iowan Old Style','Palatino Linotype',Georgia,serif}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--text);font:16.5px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--navy)}:focus-visible{outline:3px solid rgb(74 144 186/60%);outline-offset:3px}
+.wrap{width:min(860px,100%);margin:0 auto;padding-inline:24px}
+.top{padding-block:16px}.top .wrap{display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto;color:var(--ink);font-weight:750;font-size:20px;letter-spacing:-.02em;text-decoration:none}
+.button{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:8px;background:var(--navy);color:#fff;font-weight:650;font-size:15px;text-decoration:none}
+article{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:36px clamp(20px,5vw,52px);margin-bottom:28px}
+h1{font:600 clamp(28px,4.5vw,38px)/1.15 var(--serif);color:var(--ink);margin:0 0 6px}
+h2{font-size:19px;line-height:1.3;color:var(--ink);margin:34px 0 10px}
+h3{font-size:16px;color:var(--ink);margin:22px 0 6px}
+p,ul,ol,table{margin:0 0 12px}li+li{margin-top:5px}
+.meta{color:var(--muted);font-size:14px;margin-bottom:20px}
+.summary{background:#f4f7fa;border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:18px 0 8px}
+.summary p{margin:0 0 6px}.summary ul{margin:0;padding-left:20px}
+.pending{background:var(--warn-bg);border:1px solid #f0d28a;color:var(--warn);border-radius:10px;padding:12px 16px;margin:16px 0}
+.pending strong{color:var(--warn)}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;background:var(--warn-bg);color:var(--warn);font-weight:700;font-size:14px}
+.table-wrap{overflow-x:auto;margin:0 0 14px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:560px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:#f4f7fa;color:var(--ink)}
+.toc{columns:2;column-gap:28px;padding-left:20px;font-size:15px}
+footer{padding-block:6px 32px;font-size:14px;color:var(--muted)}footer .wrap{display:flex;gap:8px 18px;flex-wrap:wrap}footer a{color:var(--muted)}
+@media (max-width:640px){.wrap{padding-inline:12px}article{border-radius:10px}.toc{columns:1}}
+@media print{.top,footer{display:none}article{border:0;padding:0}body{background:#fff}}
+</style>
   </head>
   <body>
-    <main>
-      <a class="back" href="./">← Volver a proposio</a>
+    <header class="top">
+      <div class="wrap">
+        <a class="brand" href="./" aria-label="proposio, inicio"><svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M29 7 L12.5 23.5 Q9 27 12.5 30.5 L19.5 37.5" stroke="#20375A" stroke-width="6.5"/><path d="M35 13 L51.5 29.5 Q55 33 51.5 36.5 L37 51" stroke="#4A90BA" stroke-width="6.5"/><path d="M13 54 L39 28" stroke="#EEF2F6" stroke-width="12"/><path d="M13 54 L39 28" stroke="#20375A" stroke-width="6.5"/></g><path d="M30 22 H45 V37 Z" fill="#20375A" stroke="#EEF2F6" stroke-width="3" stroke-linejoin="round" paint-order="stroke"/></svg><span>proposio</span></a>
+        <a class="button" href="app.html">Abrir proposio</a>
+      </div>
+    </header>
+    <main class="wrap">
       <article>
-        <h1>Política de privacidad</h1>
+
+        <h1>Política de Privacidad</h1>
         <p class="meta">Última actualización: 12 de octubre de 2026</p>
 
-        <h2>1. Quién es el responsable</h2>
-        <p>
-          Responsable del tratamiento: Albert Fernández. Contacto para cuestiones de privacidad:
-          <a href="mailto:albertfernandezrod@gmail.com">albertfernandezrod@gmail.com</a>.
-        </p>
+        <div class="summary">
+          <p><strong>Resumen</strong> (la información completa está debajo):</p>
+          <ul>
+            <li>Sin cuenta, lo que escribes se queda en tu navegador: no se envía a nuestros servidores.</li>
+            <li>Con cuenta, guardamos tu email, tus propuestas, tus ajustes y los datos técnicos necesarios, solo para prestarte el servicio.</li>
+            <li>No usamos cookies de analítica ni de publicidad, no vendemos datos y no enviamos publicidad.</li>
+            <li>Puedes borrar tu cuenta y todos sus datos desde la propia app, en cualquier momento.</li>
+          </ul>
+        </div>
 
-        <h2>2. Qué datos se tratan</h2>
+        <h2>Índice</h2>
+        <ol class="toc">
+          <li><a href="#responsable">Responsable del tratamiento</a></li>
+          <li><a href="#datos">Qué datos tratamos</a></li>
+          <li><a href="#finalidades">Finalidades y bases jurídicas</a></li>
+          <li><a href="#clientes">Si eres cliente de un usuario</a></li>
+          <li><a href="#conservacion">Plazos de conservación</a></li>
+          <li><a href="#destinatarios">Destinatarios y proveedores</a></li>
+          <li><a href="#transferencias">Transferencias internacionales</a></li>
+          <li><a href="#derechos">Tus derechos y cómo ejercerlos</a></li>
+          <li><a href="#seguridad">Medidas de seguridad</a></li>
+          <li><a href="#otros">Otra información</a></li>
+          <li><a href="#cambios">Cambios en esta política</a></li>
+        </ol>
+
+        <h2 id="responsable">1. Responsable del tratamiento</h2>
         <ul>
-          <li>
-            <strong>Sin cuenta:</strong> todo lo que escribes (propuestas, tus datos, logotipo y textos guardados) se
-            guarda solo en tu navegador. No se envía a ningún servidor de proposio.
-          </li>
-          <li>
-            <strong>Con cuenta:</strong> tu email, las propuestas que crees (incluidos los datos de tus clientes que
-            escribas en ellas), tu logotipo, tus datos profesionales, tus textos guardados, tu catálogo de servicios, los
-            datos de la calculadora de precio por hora y el número de propuestas descargadas o enviadas cada mes.
-          </li>
-          <li>
-            <strong>Si entras con Google:</strong> Google nos facilita tu email, tu nombre y tu foto de perfil para
-            crear tu cuenta. No recibimos tu contraseña de Google ni acceso a tu correo u otros datos.
-          </li>
-          <li>
-            <strong>Si envías una propuesta por enlace:</strong> una copia de la propuesta tal como la ve tu cliente,
-            el código del enlace, cuándo se envió, cuántas veces y cuándo se abrió y, si tu cliente la acepta, el nombre
-            que escribe, la fecha y los extras que elige. Cualquier persona que tenga el enlace puede ver esa propuesta:
-            compártelo solo con tu cliente. Puedes desactivarlo cuando quieras.
-          </li>
-          <li>
-            <strong>Si contratas un plan de pago:</strong> el plan, el estado de la suscripción y los identificadores de
-            cliente y suscripción de Stripe. Los datos de tu tarjeta los trata directamente Stripe: proposio no los ve ni
-            los guarda.
-          </li>
-          <li>
-            <strong>Datos técnicos:</strong> al visitar la web, los servicios que la alojan y que sirven sus librerías
-            reciben tu dirección IP y datos técnicos del navegador, como ocurre con cualquier web.
-          </li>
+          <li><strong>Responsable:</strong> Albert Fernández. Los demás datos identificativos figuran en el <a href="aviso-legal.html">Aviso legal</a>.</li>
+          <li><strong>Contacto para privacidad:</strong> <a href="mailto:albertfernandezrod@gmail.com">albertfernandezrod@gmail.com</a></li>
+          <li><strong>Delegado de protección de datos:</strong> no se ha designado, porque la actividad no lo exige (artículo 37 del RGPD y artículo 34 de la LOPDGDD).</li>
         </ul>
         <p>
-          Si incluyes datos personales de tus clientes en una propuesta, eres responsable de tener una base legal para
-          hacerlo. proposio solo los guarda para que puedas trabajar con ellos.
+          Esta política se aplica al sitio web de proposio y se rige por el Reglamento (UE) 2016/679 (RGPD), la Ley Orgánica
+          3/2018 de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD) y la Ley 34/2002 (LSSI-CE).
         </p>
 
-        <h2>3. Para qué se usan</h2>
+        <h2 id="datos">2. Qué datos tratamos</h2>
+        <h3>2.1. Si usas proposio sin cuenta</h3>
+        <p>
+          Todo lo que escribes (propuestas, tus datos profesionales, logotipo, textos guardados, catálogo de servicios,
+          datos de la calculadora de precio por hora y el contador mensual) se guarda <strong>solo en el almacenamiento de
+          tu navegador</strong>. No se envía a nuestros servidores. Los PDF se generan en tu propio dispositivo.
+        </p>
+        <h3>2.2. Si creas una cuenta</h3>
         <ul>
-          <li>Crear tu cuenta y permitirte entrar mediante un enlace enviado a tu email.</li>
-          <li>Guardar tus propuestas, tu diseño y tus textos para que puedas usarlos en cualquier dispositivo.</li>
-          <li>Aplicar el límite mensual de propuestas de tu plan.</li>
-          <li>
-            Mostrar a tu cliente la propuesta que le envías, registrar su aceptación y avisarte de si la ha abierto o
-            aceptado. Para tu cliente, sus datos (el nombre que escribe al aceptar) se usan solo para esto.
-          </li>
-          <li>Gestionar tu suscripción y los cobros, si contratas un plan de pago.</li>
+          <li><strong>Datos de acceso:</strong> tu dirección de email. Si entras con Google, además los datos que Google nos facilita: nombre, foto de perfil y el identificador de tu cuenta de Google. No recibimos tu contraseña de Google ni acceso a tu correo, contactos u otros datos.</li>
+          <li><strong>Contenido de tus propuestas:</strong> todo lo que escribas en ellas, incluidos los datos de tus clientes (por ejemplo, su nombre y su persona de contacto) y los importes.</li>
+          <li><strong>Ajustes de tu cuenta:</strong> tus datos profesionales (nombre o empresa y contacto), diseño y logotipo, textos guardados, catálogo de servicios y los datos que introduzcas en la calculadora de precio por hora (ingresos deseados, gastos, porcentaje para impuestos, horas y semanas facturables).</li>
+          <li><strong>Uso del servicio:</strong> qué propuestas has descargado o enviado cada mes, para aplicar el límite mensual de tu plan.</li>
+          <li><strong>Datos técnicos de la sesión:</strong> fechas de alta y de último acceso, y los datos técnicos que registra nuestro proveedor de base de datos y autenticación al iniciar sesión y en cada petición (como la dirección IP y el tipo de navegador), para el funcionamiento y la seguridad del servicio.</li>
         </ul>
-        <p>No se usan para publicidad ni se venden a terceros.</p>
-
-        <h2>4. Base legal</h2>
+        <h3>2.3. Si envías una propuesta por enlace</h3>
         <p>
-          La ejecución del servicio que solicitas al crear tu cuenta (artículo 6.1.b del Reglamento General de
-          Protección de Datos). Para los datos que escribe tu cliente al aceptar una propuesta, el interés
-          legítimo en dejar constancia de la aceptación de un presupuesto (artículo 6.1.f).
+          Guardamos una copia de la propuesta tal como la verá tu cliente, un código secreto para el enlace, la fecha de envío,
+          el número de veces que se abre el enlace y las fechas de la primera y la última apertura. En la base de datos no
+          guardamos quién lo abre ni desde dónde (los proveedores sí registran datos técnicos de cada conexión; ver el apartado
+          2.4). Si tu cliente la acepta, guardamos el nombre que escribe, la fecha y hora, los extras que elige y el
+          total calculado por el servidor.
+        </p>
+        <h3>2.4. Al visitar la web</h3>
+        <p>
+          Como en cualquier web, al cargar las páginas tu navegador se conecta a los servicios que alojan la web y sirven sus
+          librerías (ver el apartado 6), que reciben tu dirección IP y datos técnicos del navegador. No usamos herramientas de
+          analítica ni de publicidad.
+        </p>
+        <p>
+          <strong>No tratamos datos de categorías especiales</strong> (salud, ideología, etc.). Te pedimos que no los incluyas
+          en tus propuestas.
         </p>
 
-        <h2>5. Quién más interviene (encargados del tratamiento)</h2>
+        <h2 id="finalidades">3. Finalidades y bases jurídicas</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Para qué</th><th>Datos</th><th>Base jurídica (RGPD)</th></tr></thead>
+            <tbody>
+              <tr><td>Crear y gestionar tu cuenta y permitirte entrar (enlace por email o Google)</td><td>Datos de acceso y técnicos de la sesión</td><td>Ejecución del contrato de uso del servicio que aceptas al crear la cuenta (art. 6.1.b)</td></tr>
+              <tr><td>Guardar tus propuestas y ajustes y mostrártelos en cualquier dispositivo</td><td>Contenido y ajustes</td><td>Ejecución del contrato (art. 6.1.b)</td></tr>
+              <tr><td>Aplicar el límite mensual de propuestas de tu plan</td><td>Uso del servicio</td><td>Ejecución del contrato (art. 6.1.b)</td></tr>
+              <tr><td>Enviar tus propuestas por enlace, contarte cuándo se abren y registrar la aceptación</td><td>Datos del apartado 2.3</td><td>Ejecución del contrato contigo (art. 6.1.b). Respecto a los datos de tus clientes, ver el apartado 4</td></tr>
+              <tr><td>Enviarte los emails necesarios para el servicio (por ejemplo, el enlace de acceso)</td><td>Email</td><td>Ejecución del contrato (art. 6.1.b)</td></tr>
+              <tr><td>Proteger el servicio frente a abusos, fraudes y accesos indebidos</td><td>Datos técnicos</td><td>Interés legítimo en la seguridad del servicio (art. 6.1.f)</td></tr>
+              <tr><td>Atender tus solicitudes y ejercicios de derechos</td><td>Los que nos facilites</td><td>Cumplimiento de obligaciones legales (art. 6.1.c)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          No enviamos comunicaciones comerciales ni boletines, no elaboramos perfiles con fines comerciales y no tomamos
+          decisiones automatizadas con efectos jurídicos sobre ti. Ningún tratamiento se basa actualmente en tu
+          consentimiento; si en el futuro alguno lo hiciera, podrías retirarlo en cualquier momento.
+        </p>
+        <p>
+          Facilitar tu email es necesario para tener una cuenta. Sin cuenta puedes usar proposio igualmente, con los datos
+          guardados solo en tu navegador.
+        </p>
+
+        <h2 id="clientes">4. Si eres cliente de un usuario de proposio</h2>
+        <p>
+          Si has recibido una propuesta a través de proposio, el responsable de tus datos es el profesional o la empresa que te
+          la ha enviado: decide qué datos tuyos incluye y para qué. proposio los trata <strong>por cuenta de ese profesional</strong>,
+          como encargado del tratamiento (art. 28 RGPD), solo para mostrarte la propuesta y registrar tu aceptación.
+        </p>
+        <p>
+          Al abrir el enlace se registra la visita (número de aperturas y fechas) para informar al profesional. Si aceptas, se
+          registran el nombre que escribas, la fecha y hora, los extras elegidos y el total, y el profesional podrá verlos y
+          descargar un justificante. Para ejercer tus derechos, dirígete al profesional que te envió la propuesta; si nos
+          escribes a nosotros, le trasladaremos tu solicitud.
+        </p>
+
+        <h2 id="conservacion">5. Plazos de conservación</h2>
         <ul>
-          <li>
-            <strong>Supabase</strong>: autenticación y base de datos. Región del servidor: Unión Europea (Fráncfort, Alemania).
-          </li>
-          <li>
-            <strong>Google</strong>: solo si eliges «Continuar con Google», para identificarte.
-          </li>
-          <li>
-            <strong>Proveedor de correo</strong> (por ejemplo, Google/Gmail): solo para enviarte los enlaces de
-            acceso y los avisos de tu cuenta, como que un cliente ha aceptado tu propuesta.
-          </li>
-          <li>
-            <strong>Stripe</strong>: cobro de las suscripciones y emisión de facturas. Trata los datos de pago como
-            responsable o encargado según su propia política de privacidad.
-          </li>
-          <li><strong>GitHub Pages</strong> (GitHub, Inc.): alojamiento de la web.</li>
-          <li>
-            <strong>cdnjs (Cloudflare) y jsDelivr</strong>: sirven las librerías que usa la web (generador de PDF y
-            conexión con Supabase). Solo reciben datos técnicos de la conexión, no el contenido de tus propuestas.
-          </li>
+          <li><strong>Datos de tu cuenta, propuestas, ajustes y registro de uso:</strong> mientras mantengas la cuenta. Al eliminarla desde <em>Mi cuenta → Eliminar mi cuenta y mis datos</em>, se borran de inmediato de la base de datos.</li>
+          <li><strong>Enlaces enviados, visitas y aceptaciones:</strong> hasta que elimines la propuesta o tu cuenta. Desactivar un enlace impide abrirlo, pero no borra sus datos.</li>
+          <li><strong>Datos guardados en tu navegador:</strong> hasta que los borres desde el propio navegador. Al cerrar sesión se borra la copia del borrador de ese navegador.</li>
+          <li><strong>Registros técnicos y copias de seguridad de nuestros proveedores:</strong> durante los plazos limitados que fijan esos proveedores, tras los cuales se eliminan.</li>
+          <li><strong>Datos necesarios para responder de posibles responsabilidades:</strong> se conservarán bloqueados, cuando proceda, durante los plazos de prescripción legal (art. 32 LOPDGDD).</li>
+        </ul>
+
+        <h2 id="destinatarios">6. Destinatarios y proveedores</h2>
+        <p>No vendemos ni cedemos tus datos a terceros. Solo acceden a ellos los proveedores necesarios para prestar el servicio:</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Proveedor</th><th>Servicio</th><th>Qué datos</th></tr></thead>
+            <tbody>
+              <tr><td>Supabase, Inc.</td><td>Base de datos, autenticación y envío de los emails de acceso. Servidores en Unión Europea (Fráncfort, Alemania). Actúa como encargado del tratamiento.</td><td>Datos de la cuenta, contenido, enlaces y datos técnicos</td></tr>
+              <tr><td>GitHub, Inc. (GitHub Pages)</td><td>Alojamiento de las páginas de la web</td><td>Dirección IP y datos técnicos de la visita</td></tr>
+              <tr><td>Cloudflare, Inc. (cdnjs) y jsDelivr</td><td>Redes que sirven las librerías de la web (generador de PDF y conexión con la base de datos)</td><td>Dirección IP y datos técnicos de la conexión; no el contenido de tus propuestas</td></tr>
+              <tr><td>Google</td><td>Solo si eliges «Continuar con Google»: identificarte con tu cuenta de Google</td><td>Los indicados en el apartado 2.2; Google trata tus datos de su cuenta según su propia política de privacidad</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Cuando compartes una propuesta por WhatsApp, por email o con otras apps, el mensaje se prepara en tu dispositivo y lo
+          envías tú con esa aplicación; proposio no envía datos a esos servicios. También podremos comunicar datos a las
+          autoridades cuando una ley lo exija.
+        </p>
+        <p>
+          A fecha de esta versión no hay pagos activos, así que no tratamos datos de pago. Si se activan, esta política se
+          actualizará antes indicando el proveedor de pagos.
+        </p>
+
+        <h2 id="transferencias">7. Transferencias internacionales</h2>
+        <p>
+          Los datos de la base de datos se alojan en la Unión Europea. Algunos proveedores (Supabase, GitHub, Cloudflare y
+          Google) son empresas con sede o personal en Estados Unidos, por lo que puede haber accesos o transferencias fuera del
+          Espacio Económico Europeo. En esos casos se realizan con las garantías previstas en el RGPD, como el Marco de
+          Privacidad de Datos UE-EE. UU. para las empresas adheridas o las cláusulas contractuales tipo de la Comisión Europea.
+          Puedes pedirnos más información en <a href="mailto:albertfernandezrod@gmail.com">albertfernandezrod@gmail.com</a>.
+        </p>
+
+        <h2 id="derechos">8. Tus derechos y cómo ejercerlos</h2>
+        <p>Puedes ejercer en cualquier momento los siguientes derechos:</p>
+        <ul>
+          <li><strong>Acceso:</strong> saber qué datos tuyos tratamos.</li>
+          <li><strong>Rectificación:</strong> corregir datos inexactos (muchos los puedes cambiar tú mismo en la app).</li>
+          <li><strong>Supresión:</strong> pedir que borremos tus datos; puedes hacerlo tú mismo eliminando tu cuenta.</li>
+          <li><strong>Oposición:</strong> oponerte a los tratamientos basados en interés legítimo.</li>
+          <li><strong>Limitación:</strong> pedir que conservemos tus datos sin tratarlos, en los casos previstos por la ley.</li>
+          <li><strong>Portabilidad:</strong> recibir los datos que nos has facilitado en un formato estructurado y de uso común.</li>
+          <li><strong>Retirada del consentimiento:</strong> si algún tratamiento se basara en él, retirarlo sin que afecte a lo anterior.</li>
         </ul>
         <p>
-          Algunos de estos proveedores pueden tratar datos fuera del Espacio Económico Europeo, con las garantías
-          previstas en la normativa (por ejemplo, cláusulas contractuales tipo de la Comisión Europea).
+          <strong>Cómo:</strong> escribe a <a href="mailto:albertfernandezrod@gmail.com">albertfernandezrod@gmail.com</a> desde el email de tu cuenta, indicando el derecho que quieres ejercer. Si no
+          podemos confirmar tu identidad, te pediremos la información mínima necesaria. Responderemos en el plazo de un mes,
+          ampliable en dos meses más en casos complejos (te lo comunicaríamos). Es gratuito.
+        </p>
+        <p>
+          Si consideras que no hemos atendido correctamente tus derechos, puedes presentar una reclamación ante la
+          <strong>Agencia Española de Protección de Datos</strong> (C/ Jorge Juan, 6, 28001 Madrid ·
+          <a href="https://www.aepd.es" rel="noopener">www.aepd.es</a>).
         </p>
 
-        <h2>6. Cuánto tiempo se conservan</h2>
+        <h2 id="seguridad">9. Medidas de seguridad</h2>
+        <ul>
+          <li>Todas las comunicaciones con la web y la base de datos van cifradas (HTTPS).</li>
+          <li>Reglas de seguridad en la base de datos: cada usuario solo puede leer y modificar sus propios datos, aunque alguien manipule la app.</li>
+          <li>No hay contraseñas de proposio que puedan filtrarse: se entra con un enlace de un solo uso enviado por email o con Google.</li>
+          <li>Los enlaces de las propuestas usan un código aleatorio difícil de adivinar y se pueden desactivar en cualquier momento.</li>
+          <li>Los importes de una aceptación los calcula el servidor; el límite mensual también se aplica en el servidor.</li>
+          <li>El logotipo se procesa en tu dispositivo y no se guardan datos de tarjetas bancarias.</li>
+        </ul>
         <p>
-          Mientras mantengas tu cuenta. Los datos de facturación pueden conservarse durante los plazos que exija la
-          normativa fiscal. Puedes eliminar tu cuenta en cualquier momento desde <em>Mi cuenta → Eliminar mi cuenta
-          y mis datos</em>: se borran tu cuenta, tus propuestas, tus enlaces enviados (con sus visitas y
-          aceptaciones), tu diseño, tus textos guardados, tu catálogo y tu registro de uso. Al borrar una propuesta
-          también se borra su enlace.
-          Las copias de seguridad del proveedor pueden conservar datos durante un periodo limitado antes de borrarse.
+          Ningún sistema es infalible. Si se produjera una violación de seguridad que afectase a tus datos, actuaríamos según los
+          artículos 33 y 34 del RGPD, incluida la notificación a la AEPD y, cuando corresponda, a ti.
         </p>
 
-        <h2>7. Tus derechos</h2>
+        <h2 id="otros">10. Otra información</h2>
+        <ul>
+          <li><strong>Edad mínima:</strong> proposio es una herramienta para profesionales y está dirigida a mayores de 18 años. No tratamos conscientemente datos de menores.</li>
+          <li><strong>Cookies y almacenamiento del navegador:</strong> ver la <a href="cookies.html">Política de cookies</a>. No usamos analítica ni publicidad.</li>
+          <li><strong>Datos de terceros:</strong> si incluyes datos de otras personas en tus propuestas, eres responsable de tener una base legal para hacerlo y de informarles. Las <a href="condiciones.html#encargo">Condiciones de Uso</a> regulan cómo los tratamos por tu cuenta.</li>
+        </ul>
+
+        <h2 id="cambios">11. Cambios en esta política</h2>
         <p>
-          Puedes pedir acceso, rectificación, supresión, oposición, limitación y portabilidad de tus datos escribiendo a
-          <a href="mailto:albertfernandezrod@gmail.com">albertfernandezrod@gmail.com</a>. Si consideras que no se han respetado tus derechos, puedes
-          reclamar ante la Agencia Española de Protección de Datos (<a href="https://www.aepd.es" rel="noopener">www.aepd.es</a>).
-          Si eres cliente de un usuario de proposio y aceptaste una propuesta, también puedes ejercer estos derechos
-          escribiendo a esa misma dirección.
+          Si cambian los tratamientos (por ejemplo, al activar pagos o avisos por email), actualizaremos esta política antes y
+          cambiaremos la fecha de arriba. Si los cambios son importantes, te avisaremos dentro de la app.
         </p>
 
-        <h2>8. Almacenamiento en tu navegador</h2>
-        <p>
-          proposio guarda en tu navegador (almacenamiento local) el borrador de la propuesta, tus preferencias y, si
-          entras, la sesión de tu cuenta. Es necesario para que la aplicación funcione y no se usa para seguimiento ni
-          publicidad. Al cerrar sesión se borra la copia del borrador de ese navegador.
-        </p>
       </article>
     </main>
+    <footer>
+      <div class="wrap">
+        <a href="./">Inicio</a>
+        <a href="aviso-legal.html">Aviso legal</a>
+        <a href="privacidad.html" aria-current="page">Política de Privacidad</a>
+        <a href="condiciones.html">Condiciones de Uso</a>
+        <a href="cookies.html">Política de cookies</a>
+      </div>
+    </footer>
   </body>
 </html>

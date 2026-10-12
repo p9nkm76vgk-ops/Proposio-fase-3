@@ -29,8 +29,9 @@ confirmarlo con una gestoría o un abogado.
 
 ## 3. Legal y fiscal ⚖️
 
-- [ ] **Política de privacidad** (`privacidad.html`): responsable, contacto y región del servidor.
-- [ ] **Condiciones** (`condiciones.html`): completa lo marcado antes de cobrar.
+- [ ] **Aviso legal** (`aviso-legal.html`): añade NIF y domicilio en `legal.mjs` (obligatorio por la LSSI-CE) y regenera.
+- [ ] **Textos legales** (`legal.mjs`): revísalos con un profesional antes de abrir al público.
+- [ ] **Antes de cobrar**: redacta las condiciones de contratación (precio, impuestos, renovación, cancelación y desistimiento) y actualiza la Política de Privacidad con el proveedor de pagos.
 - [ ] **Identificación del titular:** la ley española de servicios web suele exigir publicar nombre,
       NIF, domicilio y email de quien presta un servicio con actividad económica. Si no quieres
       publicar tu domicilio personal, consulta alternativas (domicilio profesional, coworking,

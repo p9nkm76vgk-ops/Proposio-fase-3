@@ -52,7 +52,7 @@ export function LoginDialog({ open, onClose, intro = '' }) {
 
   const google = async () => {
     if (!accepted) {
-      setError('Para crear o usar tu cuenta tienes que aceptar la política de privacidad.')
+      setError('Para crear o usar tu cuenta tienes que aceptar las Condiciones de Uso.')
       return
     }
     setStatus('google')
@@ -73,7 +73,7 @@ export function LoginDialog({ open, onClose, intro = '' }) {
       return
     }
     if (!accepted) {
-      setError('Para crear o usar tu cuenta tienes que aceptar la política de privacidad.')
+      setError('Para crear o usar tu cuenta tienes que aceptar las Condiciones de Uso.')
       return
     }
     // Cada enlace gasta del cupo de emails del proyecto: se evita pedir varios seguidos
@@ -135,9 +135,13 @@ export function LoginDialog({ open, onClose, intro = '' }) {
           <label className="checkbox">
             <input id="login-privacy" type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
             <span>
-              He leído y acepto la{' '}
+              Acepto las{' '}
+              <a href="condiciones.html" target="_blank" rel="noopener">
+                Condiciones de Uso
+              </a>{' '}
+              y he leído la{' '}
               <a href="privacidad.html" target="_blank" rel="noopener">
-                política de privacidad
+                Política de Privacidad
               </a>
               .
             </span>

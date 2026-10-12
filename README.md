@@ -83,7 +83,7 @@ Qué hay que saber:
 - `index.html`: página de inicio que explica el producto, sin testimonios ni cifras inventadas.
 - `app.html`: la aplicación.
 - `ver.html`: la página que ve tu cliente al abrir el enlace de una propuesta.
-- `condiciones.html` y `privacidad.html`, y una lista de lanzamiento con costes.
+- `aviso-legal.html`, `privacidad.html`, `condiciones.html` y `cookies.html` (generados con `legal.mjs`), y una lista de lanzamiento con costes.
 
 **General**
 - PDF A4 con jsPDF: saltos de página, cabeceras de tabla repetidas, pie con «Página X de Y» y caracteres españoles.
@@ -147,7 +147,8 @@ Todos los archivos están en la misma carpeta, sin subcarpetas.
 |---|---|
 | `index.html` | Página comercial de inicio |
 | `app.html` | La aplicación publicable, generada con `npm run build` (no editar a mano) |
-| `condiciones.html` | Condiciones del servicio (**borrador con datos a completar**) |
+| `aviso-legal.html`, `condiciones.html`, `cookies.html` | Aviso legal, Condiciones de Uso y Política de cookies (generados; el aviso legal tiene **NIF y domicilio pendientes**) |
+| `legal.mjs` | Textos legales y datos del titular: edítalo aquí y ejecuta `npm run build` |
 | `ver.html` | Vista del cliente de una propuesta enviada por enlace, generada con `npm run build` |
 | `dev.html` | Página de desarrollo que usa Vite |
 | `ver-dev.html`, `ver.jsx` | Página de desarrollo y código de la vista del cliente |
@@ -190,7 +191,7 @@ Todos los archivos están en la misma carpeta, sin subcarpetas.
 | `supabaseLoader.js` | Carga la librería de Supabase solo si hay cuentas |
 | `AccountDialogs.jsx` | Ventanas de entrar, mis propuestas y mi cuenta |
 | `supabase.sql` | Tablas, reglas de seguridad y límite mensual (se pega en Supabase) |
-| `privacidad.html` | Política de privacidad (**borrador con datos a completar**) |
+| `privacidad.html` | Política de Privacidad (generada con `legal.mjs`) |
 | `CONFIGURAR-CUENTAS.md` | Guía paso a paso para activar las cuentas |
 | `entitlements.js` | Qué incluye cada plan |
 | `PlansDialog.jsx` | Ventana de planes y suscripción |

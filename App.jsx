@@ -791,15 +791,21 @@ export default function App() {
         <p>
           proposio · Versión de prueba.{' '}
           {account ? 'Tus propuestas se guardan en tu cuenta.' : 'Tus datos se quedan en este navegador: no se envían a ningún servidor.'}
-          {cloud.cloudEnabled && (
-            <>
-              {' '}
-              <a href="privacidad.html" target="_blank" rel="noopener">
-                Política de privacidad
-              </a>
-            </>
-          )}
         </p>
+        <nav className="app-footer__legal" aria-label="Información legal">
+          <a href="aviso-legal.html" target="_blank" rel="noopener">
+            Aviso legal
+          </a>
+          <a href="privacidad.html" target="_blank" rel="noopener">
+            Política de Privacidad
+          </a>
+          <a href="condiciones.html" target="_blank" rel="noopener">
+            Condiciones de Uso
+          </a>
+          <a href="cookies.html" target="_blank" rel="noopener">
+            Política de cookies
+          </a>
+        </nav>
       </footer>
 
       <Toast toast={toast} onClose={closeToast} />

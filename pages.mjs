@@ -296,8 +296,10 @@ function page(p) {
       <div class="wrap">
         <span>proposio</span>
         <a href="./">Inicio</a>
-        <a href="privacidad.html">Privacidad</a>
-        <a href="condiciones.html">Condiciones</a>
+        <a href="aviso-legal.html">Aviso legal</a>
+        <a href="privacidad.html">Política de Privacidad</a>
+        <a href="condiciones.html">Condiciones de Uso</a>
+        <a href="cookies.html">Política de cookies</a>
       </div>
     </footer>
   </body>
@@ -306,7 +308,7 @@ function page(p) {
 }
 
 function sitemap() {
-  const urls = ['', 'app.html', ...PAGES.map((p) => p.file), 'privacidad.html', 'condiciones.html']
+  const urls = ['', 'app.html', ...PAGES.map((p) => p.file), 'aviso-legal.html', 'privacidad.html', 'condiciones.html', 'cookies.html']
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url><loc>${SITE_URL}${u}</loc></url>`).join('\n')}

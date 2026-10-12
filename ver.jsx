@@ -113,7 +113,16 @@ function ViewerPage() {
             Creado con <strong>proposio</strong> · Crea tus propuestas gratis
           </span>
         </a>
-        <a href="privacidad.html">Privacidad</a>
+        <p className="viewer__legal-note">
+          Al abrir esta propuesta se registran el número de visitas y sus fechas para informar a quien te la envió. Si la
+          aceptas, se guardan el nombre que escribas, la fecha y los extras elegidos.
+        </p>
+        <nav className="viewer__legal" aria-label="Información legal">
+          <a href="aviso-legal.html">Aviso legal</a>
+          <a href="privacidad.html#clientes">Política de Privacidad</a>
+          <a href="condiciones.html">Condiciones de Uso</a>
+          <a href="cookies.html">Política de cookies</a>
+        </nav>
       </footer>
     </div>
   )
