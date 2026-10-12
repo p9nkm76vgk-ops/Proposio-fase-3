@@ -22,6 +22,7 @@ export const LIMITS = {
   taxLabel: 20,
   maxListItems: 30,
   maxPhases: 12,
+  maxExtras: 10,
 }
 
 const required = (value) => typeof value === 'string' && value.trim() !== ''
@@ -102,6 +103,17 @@ export function validateProposal(p) {
     else if (cents > subtotal) add('discount.value', 'El descuento no puede ser mayor que la suma de los conceptos.')
   }
 
+  // Extras opcionales: si se empieza a escribir uno, necesita concepto y precio
+  for (const extra of p.extras ?? []) {
+    const hasConcept = required(extra.concept)
+    const hasPrice = required(extra.price)
+    if (!hasConcept && !hasPrice) continue
+    if (!hasConcept) add(`extras.${extra.id}.concept`, 'Describe este extra.')
+    const cents = parseAmountToCents(extra.price)
+    if (cents === null) add(`extras.${extra.id}.price`, 'Indica el precio del extra.')
+    else if (Number.isNaN(cents) || cents <= 0) add(`extras.${extra.id}.price`, 'Precio no válido. Ejemplo: 150 o 99,50')
+  }
+
   if (!['included', 'excluded', 'unspecified'].includes(p.tax?.mode)) {
     add('tax.mode', 'Elige cómo se tratan los impuestos.')
   } else if (p.tax.mode === 'excluded') {
@@ -112,6 +124,12 @@ export function validateProposal(p) {
     if (typeof rate === 'number' && !Number.isNaN(rate) && !required(p.tax.label)) {
       add('tax.label', 'Indica el nombre del impuesto (por ejemplo, IVA).')
     }
+  }
+
+  const hours = (p.estimatedHours ?? '').trim()
+  if (hours !== '') {
+    const h = parseAmountToCents(hours)
+    if (Number.isNaN(h) || h <= 0 || h > 1000000) add('estimatedHours', 'Escribe un número de horas válido, por ejemplo 12 o 12,5.')
   }
 
   // 6. Condiciones y próximos pasos

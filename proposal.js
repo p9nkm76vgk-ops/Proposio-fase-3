@@ -45,6 +45,11 @@ export function createPhase(name = '', duration = '') {
   return { id: createId(), name, duration }
 }
 
+/** Extra opcional: un servicio que el cliente puede añadir al aceptar (no suma al total). */
+export function createExtra(concept = '', price = '') {
+  return { id: createId(), concept, price }
+}
+
 export function createDefaultDesign() {
   return { template: DEFAULT_TEMPLATE, accent: DEFAULT_ACCENT, logo: null }
 }
@@ -72,8 +77,10 @@ export function createEmptyProposal({ professional, design } = {}) {
     timeline: '',
     phases: [],
     priceItems: [createPriceItem()],
+    extras: [],
     discount: { mode: 'none', value: '' },
     tax: { mode: '', rate: '', label: 'IVA' },
+    estimatedHours: '', // solo para tu cálculo de precio por hora; no aparece en la propuesta
     paymentTerms: '',
     revisions: '',
     exclusions: '',
@@ -116,6 +123,7 @@ export function createSampleProposal({ design } = {}) {
       createPriceItem('Formulario de encargos', '250'),
       createPriceItem('Formación (horas)', '60', '2'),
     ],
+    extras: [createExtra('Mantenimiento mensual durante 3 meses', '150')],
     discount: { mode: 'none', value: '' },
     tax: { mode: 'excluded', rate: '21', label: 'IVA' },
     paymentTerms:
@@ -137,6 +145,7 @@ export function hasUserContent(p) {
     ...(p.deliverables ?? []).flatMap((d) => [d.text, d.detail]),
     ...(p.phases ?? []).flatMap((ph) => [ph.name, ph.duration]),
     ...(p.priceItems ?? []).flatMap((i) => [i.concept, i.unitPrice]),
+    ...(p.extras ?? []).flatMap((e) => [e.concept, e.price]),
   ]
   return texts.some((t) => typeof t === 'string' && t.trim() !== '')
 }
@@ -183,6 +192,7 @@ export function normalizeProposal(raw) {
     unitPrice: str(i.unitPrice, str(i.amount)),
   }))
   const phases = list(raw.phases, (ph) => ({ id: str(ph.id) || createId(), name: str(ph.name), duration: str(ph.duration) }))
+  const extras = list(raw.extras, (e) => ({ id: str(e.id) || createId(), concept: str(e.concept), price: str(e.price) }))
   const discountMode = DISCOUNT_MODES.some((m) => m.value === raw.discount?.mode) ? raw.discount.mode : 'none'
 
   return {
@@ -205,6 +215,7 @@ export function normalizeProposal(raw) {
     timeline: str(raw.timeline),
     phases: phases ?? [],
     priceItems: priceItems?.length ? priceItems : base.priceItems,
+    extras: extras ?? [],
     discount: { mode: discountMode, value: str(raw.discount?.value) },
     tax: {
       mode: TAX_MODES.some((m) => m.value === raw.tax?.mode) ? raw.tax.mode : '',
@@ -215,6 +226,7 @@ export function normalizeProposal(raw) {
     revisions: str(raw.revisions),
     exclusions: str(raw.exclusions),
     nextSteps: str(raw.nextSteps),
+    estimatedHours: str(raw.estimatedHours),
   }
 }
 
@@ -229,6 +241,7 @@ export function duplicateProposal(p) {
     deliverables: copy.deliverables.map((d) => ({ ...d, id: createId() })),
     phases: copy.phases.map((ph) => ({ ...ph, id: createId() })),
     priceItems: copy.priceItems.map((i) => ({ ...i, id: createId() })),
+    extras: copy.extras.map((e) => ({ ...e, id: createId() })),
   }
 }
 

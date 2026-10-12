@@ -1,11 +1,12 @@
-// Genera index.html: la versión publicable de proposio en UN SOLO ARCHIVO.
+// Genera app.html (el editor) y ver.html (la propuesta que ve el cliente), cada uno en UN SOLO ARCHIVO.
+// (index.html es la página comercial, escrita a mano, y no se toca.)
 //
 // Por qué: GitHub Pages (y cualquier alojamiento estático) sirve los archivos tal cual,
 // sin "construir" el proyecto. Un navegador no puede ejecutar .jsx directamente, así que
-// se publica un index.html que ya lleva dentro todo el código y los estilos.
+// se publica un app.html que ya lleva dentro todo el código y los estilos.
 //
 // Uso (desde esta carpeta):  npm run build
-// Después, sube el index.html nuevo a GitHub.
+// Después, sube app.html y ver.html nuevos a GitHub.
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import * as esbuild from 'esbuild'
@@ -68,33 +69,40 @@ const cdnLoaders = {
   },
 }
 
-const result = await esbuild.build({
-  entryPoints: ['main.jsx'],
-  bundle: true,
-  minify: true,
-  format: 'iife',
-  target: ['es2020'],
-  jsx: 'automatic',
-  define: { 'process.env.NODE_ENV': '"production"' },
-  write: false,
-  outdir: 'build-tmp', // no se escribe en disco: write: false
-  plugins: [cdnLoaders],
-  logLevel: 'warning',
-})
+/** Empaqueta una página (entrada .jsx + plantilla de desarrollo) en un único archivo .html. */
+async function buildPage({ entry, template: templateFile, output }) {
+  const result = await esbuild.build({
+    entryPoints: [entry],
+    bundle: true,
+    minify: true,
+    format: 'iife',
+    target: ['es2020'],
+    jsx: 'automatic',
+    define: { 'process.env.NODE_ENV': '"production"' },
+    write: false,
+    outdir: 'build-tmp', // no se escribe en disco: write: false
+    plugins: [cdnLoaders],
+    logLevel: 'warning',
+  })
 
-const js = result.outputFiles.find((f) => f.path.endsWith('.js')).text.replace(/<\/script/gi, '<\\/script')
-const css = result.outputFiles.find((f) => f.path.endsWith('.css')).text
+  const js = result.outputFiles.find((f) => f.path.endsWith('.js')).text.replace(/<\/script/gi, '<\\/script')
+  const css = result.outputFiles.find((f) => f.path.endsWith('.css')).text
 
-const template = readFileSync('dev.html', 'utf8')
-const devScript = '<script type="module" src="./main.jsx"></script>'
-if (!template.includes(devScript)) throw new Error('dev.html no contiene el script de desarrollo esperado')
+  const template = readFileSync(templateFile, 'utf8')
+  const devScript = `<script type="module" src="./${entry}"></script>`
+  if (!template.includes(devScript)) throw new Error(`${templateFile} no contiene el script de desarrollo esperado`)
 
-// Se usan funciones en replace() para que los "$" del código minificado no se interpreten como patrones.
-const html = template
-  .replace('<head>', () => '<head>\n    <!-- ARCHIVO GENERADO con "npm run build". No lo edites a mano: edita los .jsx/.js/.css y vuelve a generarlo. -->')
-  .replace('</head>', () => `    <style>${css}</style>\n  </head>`)
-  .replace(devScript, () => `<script>${js}</script>`)
+  // Se usan funciones en replace() para que los "$" del código minificado no se interpreten como patrones.
+  const html = template
+    .replace('<head>', () => '<head>\n    <!-- ARCHIVO GENERADO con "npm run build". No lo edites a mano: edita los .jsx/.js/.css y vuelve a generarlo. -->')
+    .replace('</head>', () => `    <style>${css}</style>\n  </head>`)
+    .replace(devScript, () => `<script>${js}</script>`)
 
-if (html.includes(devScript)) throw new Error('No se pudo sustituir el script de dev.html')
-writeFileSync('index.html', html)
-console.log(`index.html generado (${Math.round(html.length / 1024)} KB)`)
+  if (html.includes(devScript)) throw new Error(`No se pudo sustituir el script de ${templateFile}`)
+  writeFileSync(output, html)
+  console.log(`${output} generado (${Math.round(html.length / 1024)} KB)`)
+}
+
+// app.html: el editor de propuestas.  ver.html: la página que ve el cliente al abrir un enlace.
+await buildPage({ entry: 'main.jsx', template: 'dev.html', output: 'app.html' })
+await buildPage({ entry: 'ver.jsx', template: 'ver-dev.html', output: 'ver.html' })

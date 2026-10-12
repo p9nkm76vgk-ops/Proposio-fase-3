@@ -1,15 +1,22 @@
 // Cabecera: marca, contador mensual y acciones principales.
 
 import { BrandMark } from './BrandMark.jsx'
-import { CopyIcon, DownloadIcon, FileIcon, FolderIcon, LoginIcon, SparkIcon, Spinner, UserIcon } from './Icons.jsx'
+import { PLAN_LABELS } from './entitlements.js'
+import { ChartIcon, CopyIcon, DownloadIcon, FileIcon, FolderIcon, LoginIcon, SparkIcon, Spinner, UserIcon } from './Icons.jsx'
 
-export function UsageMeter({ usage, account }) {
+export function UsageMeter({ usage, account, plan = 'free', onOpenPlans }) {
   const percent = usage.limit ? Math.min(100, (usage.used / usage.limit) * 100) : 0
   const full = usage.limit > 0 && usage.used >= usage.limit
   return (
     <div className="usage" title={account ? 'Uso de tu cuenta este mes' : 'Contador provisional guardado solo en este navegador'}>
       <div className="usage__text">
-        <span className="usage__plan">Plan gratuito</span>
+        {onOpenPlans ? (
+          <button type="button" className="usage__plan usage__plan--button" onClick={onOpenPlans} title="Ver planes">
+            Plan {PLAN_LABELS[plan]}
+          </button>
+        ) : (
+          <span className="usage__plan">{plan === 'free' ? 'Plan gratuito' : `Plan ${PLAN_LABELS[plan]}`}</span>
+        )}
         {usage.loading ? (
           <span>Comprobando…</span>
         ) : (
@@ -55,22 +62,26 @@ export function AppHeader({
   onLogin,
   onOpenProposals,
   onOpenAccount,
+  onOpenDashboard,
+  onOpenPlans,
+  plan,
   exporting,
 }) {
   return (
     <header className="app-header">
       <div className="app-header__inner">
-        <div className="brand">
+        <a className="brand" href="./" title="Ir a la página de inicio de proposio">
           <BrandMark size={34} />
           <span className="brand__name">proposio</span>
-        </div>
+        </a>
 
-        <UsageMeter usage={usage} account={account} />
+        <UsageMeter usage={usage} account={account} plan={plan} onOpenPlans={onOpenPlans} />
 
         <div className="app-header__actions">
           <HeaderButton icon={<SparkIcon />} label="Ejemplo" onClick={onSample} />
           <HeaderButton icon={<CopyIcon />} label="Duplicar" onClick={onDuplicate} />
           <HeaderButton icon={<FileIcon />} label="Nueva" onClick={onNew} />
+          {cloudEnabled && account && <HeaderButton icon={<ChartIcon />} label="Panel" onClick={onOpenDashboard} />}
           {cloudEnabled && account && <HeaderButton icon={<FolderIcon />} label="Mis propuestas" onClick={onOpenProposals} />}
           {cloudEnabled && account && <HeaderButton icon={<UserIcon />} label="Mi cuenta" onClick={onOpenAccount} />}
           {cloudEnabled && !account && <HeaderButton icon={<LoginIcon />} label="Entrar" onClick={onLogin} />}
@@ -80,6 +91,7 @@ export function AppHeader({
             onClick={onExport}
             disabled={exporting}
             aria-busy={exporting ? 'true' : undefined}
+            aria-label={exporting ? 'Generando PDF' : 'Descargar PDF'}
           >
             {exporting ? <Spinner /> : <DownloadIcon />}
             <span>

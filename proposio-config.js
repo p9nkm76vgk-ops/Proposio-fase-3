@@ -1,17 +1,29 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Configuración de proposio. Puedes editar este archivo directamente en GitHub:
-// no hace falta volver a generar index.html.
+// no hace falta volver a generar app.html.
 //
-// Cuentas de usuario (Supabase): mientras los dos valores estén vacíos, proposio
-// funciona sin cuentas y guarda todo en el navegador.
-// Para activarlas, sigue CONFIGURAR-CUENTAS.md y pega aquí:
-//   supabaseUrl:     la URL del proyecto, p. ej. 'https://abcd1234.supabase.co'
-//   supabaseAnonKey: la clave pública "anon" o "publishable"
+// 1) Cuentas de usuario (Supabase): mientras los dos valores estén vacíos, proposio
+//    funciona sin cuentas y guarda todo en el navegador. Guía: CONFIGURAR-CUENTAS.md
+//      supabaseUrl:     la URL del proyecto, p. ej. 'https://abcd1234.supabase.co'
+//      supabaseAnonKey: la clave pública "anon" o "publishable"
+//    Estas claves son PÚBLICAS por diseño. NUNCA pegues aquí la clave "service_role"
+//    o "secret": da acceso total a la base de datos.
 //
-// Estas claves son PÚBLICAS por diseño. La seguridad la ponen las reglas de supabase.sql.
-// NUNCA pegues aquí la clave "service_role" o "secret": da acceso total a la base de datos.
+// 2) Pagos (Stripe): solo funcionan con las cuentas activadas. Guía: CONFIGURAR-PAGOS.md
+//      enabled: true cuando hayas terminado la guía de pagos.
+//      Los precios de aquí solo se MUESTRAN: lo que se cobra es el precio configurado en
+//      Stripe. Mantén los dos iguales.
+//      priceNote: aclaración sobre impuestos, según como lo configures en Stripe
+//      (p. ej. 'IVA incluido'). Si vendes a consumidores, el precio mostrado debe ser el final.
 // ─────────────────────────────────────────────────────────────────────────────
 window.PROPOSIO_CONFIG = {
   supabaseUrl: '',
   supabaseAnonKey: '',
+
+  payments: {
+    enabled: false,
+    priceNote: '',
+    pro: { price: '7,90 €', period: 'al mes' },
+    business: { enabled: false, price: '14,90 €', period: 'al mes' },
+  },
 }

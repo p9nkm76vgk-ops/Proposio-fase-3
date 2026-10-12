@@ -132,3 +132,16 @@ export const LoginIcon = (p) => (
     <path d="m10 16 4-4-4-4M14 12H4" />
   </Icon>
 )
+
+export const ChartIcon = (p) => (
+  <Icon {...p}>
+    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+  </Icon>
+)
+
+export const SendIcon = (p) => (
+  <Icon {...p}>
+    <path d="M21 3 10 14" />
+    <path d="m21 3-7 18-4-7-7-4z" />
+  </Icon>
+)

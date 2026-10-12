@@ -47,3 +47,21 @@ if (config.problem && typeof console !== 'undefined') {
 export const SUPABASE_URL = config.url
 export const SUPABASE_ANON_KEY = config.key
 export const CONFIG_PROBLEM = config.problem
+
+// ─── Pagos ───────────────────────────────────────────────────────────────────
+function readPayments() {
+  const p = runtime.payments && typeof runtime.payments === 'object' ? runtime.payments : {}
+  const plan = (raw, fallbackPrice) => ({
+    price: clean(raw?.price) || fallbackPrice,
+    period: clean(raw?.period) || 'al mes',
+  })
+  return {
+    // Los pagos necesitan cuentas: sin Supabase configurado no se activan.
+    enabled: p.enabled === true && Boolean(config.url && config.key),
+    priceNote: clean(p.priceNote),
+    pro: plan(p.pro, '7,90 €'),
+    business: { ...plan(p.business, '14,90 €'), enabled: p.business?.enabled === true },
+  }
+}
+
+export const PAYMENTS = readPayments()

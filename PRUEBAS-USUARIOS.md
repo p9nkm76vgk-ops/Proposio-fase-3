@@ -36,7 +36,10 @@ fotógrafos, consultores o profesionales del marketing. Mejor si no son amigos �
 3. ¿Qué te ha resultado más molesto o confuso?
 4. ¿Qué echas en falta?
 5. Si mañana desapareciera esta web, ¿te importaría? ¿Por qué?
-6. (Solo al final, sin insistir) ¿Pagarías por usarla? ¿Cuánto te parecería razonable al mes?
+6. Si las cuentas están activas: envía la propuesta por enlace a alguien de confianza que haga de cliente.
+   ¿Te parece útil saber si la ha abierto y que pueda aceptarla con un botón? ¿Y al «cliente», le resultó claro?
+7. ¿Usarías los extras opcionales o el cálculo de precio por hora? ¿Te cambiaría el precio que pones?
+8. (Solo al final, sin insistir) ¿Pagarías por usarla? ¿Cuánto te parecería razonable al mes?
 
 Ojo: la respuesta a la pregunta 6 es orientativa. Decir «sí pagaría» no equivale a pagar.
 

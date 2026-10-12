@@ -6,7 +6,7 @@
 // el usuario y se añaden frases neutras de enlace (por ejemplo, la presentación sugerida).
 
 import { addDays, cleanText, formatCents, formatLongDate, formatPercent, parseISODate } from './format.js'
-import { computeTotals } from './pricing.js'
+import { computeExtras, computeTotals } from './pricing.js'
 import { normalizeDesign } from './proposal.js'
 
 /** Texto de presentación sugerido, construido solo con datos del usuario. */
@@ -47,6 +47,21 @@ function buildTaxNote(totals, taxLabel) {
       return 'Esta propuesta no especifica el tratamiento de impuestos.'
     default:
       return ''
+  }
+}
+
+/** Nota de los extras: no suman al total y llevan el mismo tratamiento de impuestos. */
+function buildExtrasNote(totals, taxLabel) {
+  const base = 'Servicios opcionales que se pueden añadir a la propuesta. No están incluidos en el total anterior.'
+  switch (totals.mode) {
+    case 'included':
+      return `${base} Sus importes incluyen impuestos.`
+    case 'excluded':
+      return totals.taxRate !== null
+        ? `${base} Sus importes no incluyen impuestos: se les aplica el mismo ${taxLabel} (${formatPercent(totals.taxRate)}).`
+        : `${base} Sus importes no incluyen impuestos.`
+    default:
+      return base
   }
 }
 
@@ -129,6 +144,17 @@ export function buildDocument(p) {
       totals: buildTotalRows(totals, taxLabel),
       note: buildTaxNote(totals, taxLabel),
       valid: totals.valid,
+    })
+  }
+
+  const extras = computeExtras(p)
+  if (extras.length > 0) {
+    sections.push({
+      key: 'extras',
+      title: 'Extras opcionales',
+      type: 'extras',
+      rows: extras.map((e) => ({ id: e.id, concept: e.concept, value: `+${formatCents(e.cents)}` })),
+      note: buildExtrasNote(totals, taxLabel),
     })
   }
 

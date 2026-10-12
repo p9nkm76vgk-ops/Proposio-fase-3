@@ -133,7 +133,7 @@ export async function deleteProposal(id) {
 export async function fetchProfile() {
   const client = await getClient()
   const row = unwrap(
-    await client.from('profiles').select('professional, design, snippets').maybeSingle(),
+    await client.from('profiles').select('professional, design, snippets, catalog, pricing_settings').maybeSingle(),
     'No se pudieron cargar tus datos.',
   )
   if (!row) return null
@@ -144,10 +144,12 @@ export async function fetchProfile() {
     },
     design: normalizeDesign(row.design),
     snippets: row.snippets && typeof row.snippets === 'object' ? row.snippets : {},
+    catalog: Array.isArray(row.catalog) ? row.catalog : [],
+    pricingSettings: row.pricing_settings && typeof row.pricing_settings === 'object' ? row.pricing_settings : {},
   }
 }
 
-/** Guarda solo las columnas indicadas: { professional?, design?, snippets? } */
+/** Guarda solo las columnas indicadas: { professional?, design?, snippets?, catalog?, pricing_settings? } */
 export async function saveProfile(account, columns) {
   const client = await getClient()
   unwrap(
@@ -169,6 +171,18 @@ function toUsage(data) {
     remaining: Math.max(0, limit - used),
     alreadyCounted,
     canExport: alreadyCounted || used < limit,
+    // null = la respuesta no informa del plan (se conserva el que ya se conocía)
+    plan: ['free', 'pro', 'business'].includes(data?.plan) ? data.plan : null,
+    subscription: data?.subscription === undefined
+      ? undefined
+      : data.subscription
+      ? {
+          plan: data.subscription.plan,
+          status: data.subscription.status,
+          currentPeriodEnd: data.subscription.current_period_end,
+          cancelAtPeriodEnd: Boolean(data.subscription.cancel_at_period_end),
+        }
+      : null,
   }
 }
 
@@ -184,10 +198,178 @@ export async function registerExport(proposalId) {
   return { allowed: Boolean(data?.allowed), usage: toUsage(data) }
 }
 
+// ─── Propuestas compartidas por enlace ───────────────────────────────────────
+
+const SHARE_COLUMNS =
+  'token, proposal_id, title, client_name, status, revoked, shared_at, view_count, first_viewed_at, last_viewed_at, accepted_at, accepted_name, accepted_extras, accepted_total_cents'
+
+function toShare(row) {
+  if (!row) return null
+  return {
+    token: row.token,
+    proposalId: row.proposal_id,
+    title: row.title,
+    clientName: row.client_name,
+    status: row.status,
+    revoked: Boolean(row.revoked),
+    sharedAt: row.shared_at,
+    viewCount: Number(row.view_count ?? 0),
+    firstViewedAt: row.first_viewed_at,
+    lastViewedAt: row.last_viewed_at,
+    acceptedAt: row.accepted_at,
+    acceptedName: row.accepted_name,
+    acceptedExtras: Array.isArray(row.accepted_extras) ? row.accepted_extras : [],
+    acceptedTotalCents: row.accepted_total_cents === null || row.accepted_total_cents === undefined ? null : Number(row.accepted_total_cents),
+    snapshot: row.snapshot ?? null, // solo con getShare(id, { withSnapshot: true })
+  }
+}
+
+/** Dirección pública que se envía al cliente. */
+export function shareUrl(token) {
+  const dir = window.location.pathname.replace(/[^/]*$/, '')
+  return `${window.location.origin}${dir}ver.html?p=${token}`
+}
+
+/** Enlace de una propuesta (o null). Con withSnapshot, incluye la versión que ve el cliente. */
+export async function getShare(proposalId, { withSnapshot = false } = {}) {
+  const client = await getClient()
+  const columns = withSnapshot ? `${SHARE_COLUMNS}, snapshot` : SHARE_COLUMNS
+  const row = unwrap(
+    await client.from('shared_proposals').select(columns).eq('proposal_id', proposalId).maybeSingle(),
+    'No se pudo consultar el enlace de la propuesta.',
+  )
+  return toShare(row)
+}
+
+export async function listShares() {
+  const client = await getClient()
+  const rows = unwrap(
+    await client.from('shared_proposals').select(SHARE_COLUMNS).order('shared_at', { ascending: false }),
+    'No se pudieron cargar tus propuestas enviadas.',
+  )
+  return (rows ?? []).map(toShare)
+}
+
+/**
+ * Crea el enlace o lo actualiza con la versión actual (si el cliente aún no la aceptó).
+ * Requisito del servidor: la propuesta debe haber contado ya en el cupo (registerExport).
+ */
+export async function shareProposal(account, snapshot, pricing) {
+  const client = await getClient()
+  const fields = {
+    title: (snapshot.project?.title ?? '').slice(0, 200),
+    client_name: (snapshot.client?.name ?? '').slice(0, 200),
+    snapshot,
+    pricing,
+  }
+  const existing = await getShare(snapshot.id)
+  if (existing?.status === 'accepted') return existing // lo aceptado no se cambia
+  if (existing) {
+    unwrap(
+      await client.from('shared_proposals').update({ ...fields, revoked: false }).eq('proposal_id', snapshot.id),
+      'No se pudo actualizar el enlace.',
+    )
+  } else {
+    unwrap(
+      await client.from('shared_proposals').insert({ user_id: account.userId, proposal_id: snapshot.id, ...fields }),
+      'No se pudo crear el enlace.',
+    )
+  }
+  return getShare(snapshot.id, { withSnapshot: true })
+}
+
+export async function setShareActive(proposalId, active) {
+  const client = await getClient()
+  unwrap(
+    await client.from('shared_proposals').update({ revoked: !active }).eq('proposal_id', proposalId),
+    active ? 'No se pudo activar el enlace.' : 'No se pudo desactivar el enlace.',
+  )
+  return getShare(proposalId, { withSnapshot: true })
+}
+
+// ─── Lado del cliente (sin cuenta): ver y aceptar una propuesta compartida ────
+
+export async function viewSharedProposal(token) {
+  const client = await getClient()
+  return unwrap(await client.rpc('view_shared_proposal', { p_token: token }), 'No se pudo cargar la propuesta.')
+}
+
+/** version: fecha de envío (shared_at) de la versión que está viendo el cliente. */
+export async function acceptSharedProposal(token, name, extraIds, version) {
+  const client = await getClient()
+  const { data, error } = await client.rpc('accept_shared_proposal', {
+    p_token: token,
+    p_name: name,
+    p_extras: extraIds,
+    p_version: version ?? null,
+  })
+  if (error) {
+    const outdated = /outdated/.test(error.message ?? '')
+    const message = /invalid_name/.test(error.message ?? '')
+      ? 'Escribe tu nombre completo (al menos 2 letras).'
+      : outdated
+        ? 'Quien te la envió acaba de actualizar la propuesta. Vuelve a cargar la página para ver la versión nueva antes de aceptarla.'
+        : /not_found/.test(error.message ?? '')
+        ? 'Este enlace ya no está disponible.'
+        : 'No se pudo aceptar la propuesta. Inténtalo de nuevo.'
+    const e = friendly(new Error(error.message), message)
+    e.outdated = outdated
+    throw e
+  }
+  return data
+}
+
+// ─── Pagos (Stripe, a través de las funciones de servidor) ───────────────────
+
+const PAYMENT_ERRORS = {
+  not_configured: 'Los pagos todavía no están configurados en el servidor.',
+  not_authenticated: 'Tu sesión ha caducado. Vuelve a entrar.',
+  invalid_plan: 'Ese plan no está disponible.',
+  no_customer: 'Todavía no tienes ninguna suscripción que gestionar.',
+  payment_provider_error: 'No se pudo conectar con el sistema de pagos. Inténtalo de nuevo en unos minutos.',
+}
+
+async function invokePaymentFunction(name, body) {
+  const client = await getClient()
+  const { data, error } = await client.functions.invoke(name, { body })
+  if (error) {
+    let code = ''
+    try {
+      code = (await error.context?.json?.())?.error ?? ''
+    } catch {
+      // respuesta sin JSON
+    }
+    throw friendly(new Error(code || error.message), PAYMENT_ERRORS[code] ?? 'No se pudo abrir el sistema de pagos. Inténtalo de nuevo.')
+  }
+  if (!data?.url || !/^https:\/\//.test(data.url)) {
+    throw friendly(new Error('invalid_url'), 'El sistema de pagos no devolvió una dirección válida.')
+  }
+  return data.url
+}
+
+/** Devuelve la dirección de la página de pago de Stripe para el plan elegido. */
+export function startCheckout(plan) {
+  return invokePaymentFunction('create-checkout', { plan })
+}
+
+/** Devuelve la dirección del portal de cliente (cambiar de plan, facturas, cancelar). */
+export function openCustomerPortal() {
+  return invokePaymentFunction('customer-portal', {})
+}
+
 // ─── Cuenta ──────────────────────────────────────────────────────────────────
 
 export async function deleteAccount() {
   const client = await getClient()
-  unwrap(await client.rpc('delete_my_account'), 'No se pudo eliminar la cuenta. Inténtalo de nuevo.')
+  const { error } = await client.rpc('delete_my_account')
+  if (error) {
+    const active = /active_subscription/.test(error.message ?? '')
+    throw friendly(
+      new Error(error.message),
+      active
+        ? 'Antes de eliminar la cuenta, cancela tu suscripción en «Gestionar suscripción». Cuando quede programada la cancelación, podrás eliminarla.'
+        : 'No se pudo eliminar la cuenta. Inténtalo de nuevo.',
+    )
+  }
   await client.auth.signOut().catch(() => {})
 }

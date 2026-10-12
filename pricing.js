@@ -87,3 +87,38 @@ export function computeTotals(proposal) {
     valid: valid && discount.valid,
   }
 }
+
+/**
+ * Resumen de importes que se guarda junto a una propuesta compartida.
+ * El servidor lo usa para recalcular el total cuando el cliente acepta (con o sin extras),
+ * sin fiarse de ningún importe enviado por el navegador del cliente.
+ */
+export function pricingSummary(proposal) {
+  const totals = computeTotals(proposal)
+  return {
+    base_subtotal: totals.subtotal,
+    discount: totals.discount.cents,
+    tax_mode: totals.mode,
+    tax_rate: totals.taxRate,
+    extras: computeExtras(proposal).map((e) => ({ id: e.id, concept: e.concept, cents: e.cents })),
+  }
+}
+
+/** Extras opcionales válidos (concepto y precio correctos). Ver bloque «Extras» en PricingEditor. */
+export function computeExtras(proposal) {
+  return (proposal.extras ?? [])
+    .map((e) => ({ id: e.id, concept: (e.concept ?? '').trim(), cents: parseAmountToCents(e.price) }))
+    .filter((e) => e.concept && Number.isInteger(e.cents) && e.cents > 0)
+}
+
+/**
+ * Total si el cliente añade ciertos extras: misma fórmula que el servidor
+ * (accept_shared_proposal en supabase.sql). Los descuentos se aplican solo a los conceptos.
+ */
+export function totalWithExtras(summary, selectedIds = []) {
+  const extras = (summary.extras ?? []).filter((e) => selectedIds.includes(e.id))
+  const extrasSum = extras.reduce((sum, e) => sum + e.cents, 0)
+  const base = summary.base_subtotal - summary.discount + extrasSum
+  const tax = typeof summary.tax_rate === 'number' ? Math.round((base * summary.tax_rate) / 100) : 0
+  return { base, tax, total: base + tax, extrasSum }
+}

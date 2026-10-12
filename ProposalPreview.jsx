@@ -120,6 +120,34 @@ function PricingBlock({ section }) {
   )
 }
 
+function ExtrasBlock({ section }) {
+  return (
+    <>
+      <div className="doc__table-wrap">
+        <table className="doc__table">
+          <thead>
+            <tr>
+              <th scope="col">Extra</th>
+              <th scope="col" className="num">
+                Importe
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {section.rows.map((row) => (
+              <tr key={row.id}>
+                <td>{row.concept}</td>
+                <td className="num strong">{row.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="doc__note">{section.note}</p>
+    </>
+  )
+}
+
 function ProposalPreviewInner({ model }) {
   const isEmpty = model.sections.length === 0 && !model.title
   const { template, accent, logo } = model.design
@@ -173,6 +201,7 @@ function ProposalPreviewInner({ model }) {
           {section.type === 'list' && <ListBlock section={section} />}
           {section.type === 'timeline' && <TimelineBlock section={section} />}
           {section.type === 'pricing' && <PricingBlock section={section} />}
+          {section.type === 'extras' && <ExtrasBlock section={section} />}
         </section>
       ))}
     </article>

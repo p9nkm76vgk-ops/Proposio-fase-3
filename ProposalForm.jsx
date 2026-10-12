@@ -9,7 +9,17 @@ import { PricingEditor } from './PricingEditor.jsx'
 import { SnippetBar } from './SnippetBar.jsx'
 import { TimelineEditor } from './TimelineEditor.jsx'
 
-export function ProposalForm({ proposal, onFieldChange, onBlur, errorFor }) {
+const ALL_UNLOCKED = {
+  gated: false,
+  templates: ['classic', 'modern', 'minimal'],
+  brand: true,
+  snippets: true,
+  history: true,
+  extras: true,
+  catalog: true,
+}
+
+export function ProposalForm({ proposal, onFieldChange, onBlur, errorFor, entitlements = ALL_UNLOCKED, onLocked }) {
   // Ayudante para no repetir value/onChange/onBlur/error en cada campo.
   const bind = (path) => {
     const value = path.split('.').reduce((obj, key) => obj?.[key], proposal) ?? ''
@@ -25,7 +35,13 @@ export function ProposalForm({ proposal, onFieldChange, onBlur, errorFor }) {
   // Campo de texto largo con "textos guardados" debajo.
   const withSnippets = (path) => ({
     ...bind(path),
-    footer: <SnippetBar field={path} value={proposal[path]} onInsert={(text) => onFieldChange(path, text)} />,
+    footer: entitlements.snippets ? (
+      <SnippetBar field={path} value={proposal[path]} onInsert={(text) => onFieldChange(path, text)} />
+    ) : (
+      <button type="button" className="link-button link-button--muted" onClick={onLocked}>
+        Guardar textos para reutilizarlos · Pro
+      </button>
+    ),
   })
 
   const suggestion = suggestedIntroduction(proposal)
@@ -38,7 +54,12 @@ export function ProposalForm({ proposal, onFieldChange, onBlur, errorFor }) {
         title="Diseño y marca"
         description="Se recuerda para tus próximas propuestas."
       >
-        <DesignEditor design={proposal.design} onChange={(key, value) => onFieldChange(`design.${key}`, value)} />
+        <DesignEditor
+          design={proposal.design}
+          onChange={(key, value) => onFieldChange(`design.${key}`, value)}
+          entitlements={entitlements}
+          onLocked={onLocked}
+        />
       </FormSection>
 
       <FormSection id="sec-general" step="2" title="Datos generales" description="Quién propone, a quién y sobre qué.">
@@ -166,8 +187,12 @@ export function ProposalForm({ proposal, onFieldChange, onBlur, errorFor }) {
           onItemsChange={(items) => onFieldChange('priceItems', items)}
           onDiscountChange={(key, value) => onFieldChange(`discount.${key}`, value)}
           onTaxChange={(key, value) => onFieldChange(`tax.${key}`, value)}
+          onExtrasChange={(extras) => onFieldChange('extras', extras)}
+          onHoursChange={(value) => onFieldChange('estimatedHours', value)}
           errorFor={errorFor}
           onBlur={onBlur}
+          entitlements={entitlements}
+          onLocked={onLocked}
         />
       </FormSection>
 

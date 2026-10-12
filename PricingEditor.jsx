@@ -2,12 +2,19 @@
 // Los totales se calculan en vivo con la misma función que usa el PDF.
 
 import { useEffect, useState } from 'react'
+import { priceItemFromCatalog } from './catalog.js'
 import { formatCents, formatPercent, parseAmountToCents } from './format.js'
-import { computeTotals, parseQuantity } from './pricing.js'
+import { computeTotals, filledPriceItems, parseQuantity } from './pricing.js'
 import { DISCOUNT_MODES, TAX_MODES, createPriceItem } from './proposal.js'
+import { compareWithMinimum, computeMinimumRate, loadRateSettings, parseHours } from './rate.js'
 import { LIMITS, fieldIdFromPath } from './validation.js'
+import { CatalogDialog } from './CatalogDialog.jsx'
+import { ExtrasEditor } from './ExtrasEditor.jsx'
 import { FormField } from './FormField.jsx'
-import { PlusIcon, TrashIcon } from './Icons.jsx'
+import { BookmarkIcon, PlusIcon, TrashIcon } from './Icons.jsx'
+import { RateDialog } from './RateDialog.jsx'
+
+const ALL_UNLOCKED = { gated: false, extras: true, catalog: true }
 
 /** Importe de una línea para mostrarlo mientras se escribe (o un guion si aún no es válido). */
 function lineTotal(item) {
@@ -42,9 +49,21 @@ function CellInput({ path, label, errorFor, onBlur, className = '', ...props }) 
   )
 }
 
-export function PricingEditor({ proposal, onItemsChange, onDiscountChange, onTaxChange, errorFor, onBlur }) {
+export function PricingEditor({
+  proposal,
+  onItemsChange,
+  onDiscountChange,
+  onTaxChange,
+  onExtrasChange,
+  onHoursChange,
+  errorFor,
+  onBlur,
+  entitlements = ALL_UNLOCKED,
+  onLocked,
+}) {
   const items = proposal.priceItems
   const [focusId, setFocusId] = useState(null)
+  const [dialog, setDialog] = useState(null) // 'catalog' | 'rate'
   const totals = computeTotals(proposal)
   const listError = errorFor('priceItems')
   const taxError = errorFor('tax.mode')
@@ -62,6 +81,14 @@ export function PricingEditor({ proposal, onItemsChange, onDiscountChange, onTax
     const item = createPriceItem()
     onItemsChange([...items, item])
     setFocusId(item.id)
+  }
+
+  /** Añade un servicio del catálogo (sustituye la fila vacía inicial, si la hay). */
+  const addFromCatalog = (entry) => {
+    const item = priceItemFromCatalog(entry)
+    const filled = filledPriceItems(items)
+    if (filled.length >= LIMITS.maxListItems) return
+    onItemsChange([...filled, item])
   }
 
   const remove = (id) => {
@@ -134,9 +161,20 @@ export function PricingEditor({ proposal, onItemsChange, onDiscountChange, onTax
         </ul>
         {listError && <p className="field__error">{listError}</p>}
         <p className="field__hint">La cantidad es opcional (por defecto 1). Usa decimales para horas: 2,5.</p>
-        <button type="button" className="button button--ghost button--small" onClick={add} disabled={items.length >= LIMITS.maxListItems}>
-          <PlusIcon size={16} /> Añadir concepto
-        </button>
+        <div className="price-editor__buttons">
+          <button type="button" className="button button--ghost button--small" onClick={add} disabled={items.length >= LIMITS.maxListItems}>
+            <PlusIcon size={16} /> Añadir concepto
+          </button>
+          {entitlements.catalog ? (
+            <button type="button" className="button button--ghost button--small" onClick={() => setDialog('catalog')}>
+              <BookmarkIcon size={16} /> Mi catálogo
+            </button>
+          ) : (
+            <button type="button" className="button button--ghost button--small" onClick={onLocked}>
+              <BookmarkIcon size={16} /> Mi catálogo <span className="pro-badge">Pro</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <fieldset className="discount" id={fieldIdFromPath('discount.mode')} tabIndex={-1}>
@@ -268,6 +306,88 @@ export function PricingEditor({ proposal, onItemsChange, onDiscountChange, onTax
         </div>
       </dl>
       {!totals.valid && totals.lines.length > 0 && <p className="totals-summary__warn">Revisa los importes marcados.</p>}
+
+      <ExtrasEditor
+        extras={proposal.extras ?? []}
+        onChange={onExtrasChange}
+        errorFor={errorFor}
+        onBlur={onBlur}
+        locked={!entitlements.extras}
+        onLocked={onLocked}
+      />
+
+      <RateCheck
+        hours={proposal.estimatedHours ?? ''}
+        onHoursChange={onHoursChange}
+        baseCents={totals.valid ? totals.base : 0}
+        error={errorFor('estimatedHours')}
+        onBlur={onBlur}
+        onOpenCalculator={() => setDialog('rate')}
+        refreshKey={dialog}
+      />
+
+      {entitlements.catalog && (
+        <CatalogDialog open={dialog === 'catalog'} onClose={() => setDialog(null)} priceItems={items} onAdd={addFromCatalog} />
+      )}
+      <RateDialog open={dialog === 'rate'} onClose={() => setDialog(null)} />
     </>
   )
+}
+
+/** «¿Cobras lo suficiente?»: compara esta propuesta con tu precio mínimo por hora. */
+function RateCheck({ hours, onHoursChange, baseCents, error, onBlur, onOpenCalculator, refreshKey }) {
+  // Se vuelve a leer al cerrar la calculadora (refreshKey cambia)
+  const rate = useMemoRate(refreshKey)
+  const parsedHours = parseHours(hours)
+  const comparison = rate.complete ? compareWithMinimum(baseCents, parsedHours, rate.hourlyCents) : null
+
+  return (
+    <div className="rate-check">
+      <p className="field__label">¿Cobras lo suficiente?</p>
+      {rate.complete ? (
+        <p className="rate-check__line">
+          Tu precio mínimo: <strong>{formatCents(rate.hourlyCents)} / hora</strong>.{' '}
+          <button type="button" className="link-button" onClick={onOpenCalculator}>
+            Cambiar mis datos
+          </button>
+        </p>
+      ) : (
+        <p className="rate-check__line">
+          Calcula cuánto necesitas cobrar por hora para llegar a lo que quieres ganar.{' '}
+          <button type="button" className="link-button" onClick={onOpenCalculator}>
+            Calcular mi precio mínimo
+          </button>
+        </p>
+      )}
+      <FormField
+        path="estimatedHours"
+        label="Horas que te llevará este proyecto"
+        optional
+        hint="Solo para este cálculo: no aparece en la propuesta."
+        value={hours}
+        onChange={onHoursChange}
+        onBlur={onBlur}
+        error={error}
+        inputMode="decimal"
+        maxLength={8}
+        placeholder="Ej.: 40"
+        className="rate-check__hours"
+      />
+      {comparison && (
+        <p className={`rate-check__verdict ${comparison.belowMinimum ? 'rate-check__verdict--low' : 'rate-check__verdict--ok'}`} role="status">
+          {comparison.belowMinimum
+            ? `Con esta propuesta cobras ${formatCents(comparison.effectiveHourlyCents)} / hora: por debajo de tu mínimo. Para llegar, el precio sin impuestos debería ser de al menos ${formatCents(comparison.minimumCents)} (faltan ${formatCents(comparison.gapCents)}).`
+            : `Con esta propuesta cobras ${formatCents(comparison.effectiveHourlyCents)} / hora: por encima de tu mínimo.`}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function useMemoRate(refreshKey) {
+  const [rate, setRate] = useState(() => computeMinimumRate(loadRateSettings()))
+  useEffect(() => {
+    if (refreshKey === null) setRate(computeMinimumRate(loadRateSettings()))
+  }, [refreshKey])
+  return rate
 }

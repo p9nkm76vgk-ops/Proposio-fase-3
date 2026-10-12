@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import { deleteAccount, listProposals, sendMagicLink } from './cloud.js'
 import { Modal } from './Feedback.jsx'
 import { Spinner, TrashIcon } from './Icons.jsx'
+import { PLAN_LABELS } from './entitlements.js'
+import { subscriptionSummary } from './PlansDialog.jsx'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
@@ -19,7 +21,7 @@ function formatDateTime(iso) {
 
 // ─── Entrar ─────────────────────────────────────────────────────────────────
 
-export function LoginDialog({ open, onClose }) {
+export function LoginDialog({ open, onClose, intro = '' }) {
   const [email, setEmail] = useState('')
   const [accepted, setAccepted] = useState(false)
   const [status, setStatus] = useState('idle') // idle | sending | sent
@@ -74,6 +76,7 @@ export function LoginDialog({ open, onClose }) {
         </>
       ) : (
         <form className="login-form" onSubmit={submit} noValidate>
+          {intro && <p className="login-form__intro">{intro}</p>}
           <p>Te enviaremos un enlace para entrar. No necesitas contraseña. Si es la primera vez, se crea tu cuenta.</p>
           <p className="modal__muted">
             Con una cuenta, tus propuestas, tu diseño y tus textos guardados quedan disponibles en cualquier dispositivo.
@@ -127,14 +130,26 @@ export function LoginDialog({ open, onClose }) {
 
 // ─── Mis propuestas ─────────────────────────────────────────────────────────
 
-export function ProposalsDialog({ open, onClose, currentId, onOpenProposal, onDeleteProposal, refreshKey }) {
+export function ProposalsDialog({
+  open,
+  onClose,
+  currentId,
+  onOpenProposal,
+  onDeleteProposal,
+  refreshKey,
+  locked = false,
+  onOpenPlans,
+  shares = [],
+  viewTracking = false,
+}) {
+  const shareById = new Map(shares.map((sh) => [sh.proposalId, sh]))
   const [items, setItems] = useState(null)
   const [error, setError] = useState(null)
   const [confirmId, setConfirmId] = useState(null)
   const [busyId, setBusyId] = useState(null)
 
   useEffect(() => {
-    if (!open) return undefined
+    if (!open || locked) return undefined
     let cancelled = false
     setItems(null)
     setError(null)
@@ -145,7 +160,7 @@ export function ProposalsDialog({ open, onClose, currentId, onOpenProposal, onDe
     return () => {
       cancelled = true
     }
-  }, [open, refreshKey])
+  }, [open, refreshKey, locked])
 
   const remove = async (id) => {
     setBusyId(id)
@@ -162,27 +177,43 @@ export function ProposalsDialog({ open, onClose, currentId, onOpenProposal, onDe
 
   return (
     <Modal open={open} title="Mis propuestas" onClose={onClose} wide>
-      {error && (
+      {locked && (
+        <div className="locked-panel">
+          <p>
+            El historial de propuestas forma parte del plan <strong>Pro</strong>. Tu propuesta actual se sigue guardando en tu
+            cuenta.
+          </p>
+          <div className="modal__actions modal__actions--start">
+            <button type="button" className="button button--primary" onClick={onOpenPlans}>
+              Ver planes
+            </button>
+          </div>
+        </div>
+      )}
+      {!locked && error && (
         <p className="field__error" role="alert">
           {error}
         </p>
       )}
-      {!items && !error && (
+      {!locked && !items && !error && (
         <p className="modal__muted loading-line">
           <Spinner size={16} /> Cargando…
         </p>
       )}
-      {items?.length === 0 && (
+      {!locked && items?.length === 0 && (
         <p className="modal__muted">
           Todavía no tienes propuestas guardadas. Se guardan solas en cuanto empiezas a escribir una.
         </p>
       )}
-      {items?.length > 0 && (
+      {!locked && items?.length > 0 && (
         <ul className="proposal-list">
           {items.map((p) => (
             <li key={p.id} className={`proposal-list__item ${p.id === currentId ? 'proposal-list__item--current' : ''}`}>
               <div className="proposal-list__info">
-                <p className="proposal-list__title">{p.title || 'Sin título'}</p>
+                <p className="proposal-list__title">
+                  {p.title || 'Sin título'}
+                  <ShareBadge share={shareById.get(p.id)} viewTracking={viewTracking} />
+                </p>
                 <p className="proposal-list__meta">
                   {p.clientName || 'Sin cliente'} · {formatDateTime(p.updatedAt)}
                 </p>
@@ -231,9 +262,27 @@ export function ProposalsDialog({ open, onClose, currentId, onOpenProposal, onDe
   )
 }
 
+/** Etiqueta de estado de una propuesta enviada por enlace. */
+function ShareBadge({ share, viewTracking }) {
+  if (!share) return null
+  let kind = 'sent'
+  let label = 'Enviada'
+  if (share.status === 'accepted') {
+    kind = 'accepted'
+    label = 'Aceptada'
+  } else if (share.revoked) {
+    kind = 'off'
+    label = 'Enlace desactivado'
+  } else if (viewTracking && share.viewCount > 0) {
+    kind = 'viewed'
+    label = 'Vista'
+  }
+  return <span className={`status-badge status-badge--${kind}`}>{label}</span>
+}
+
 // ─── Mi cuenta ──────────────────────────────────────────────────────────────
 
-export function AccountDialog({ open, onClose, account, onSignOut, onAccountDeleted }) {
+export function AccountDialog({ open, onClose, account, onSignOut, onAccountDeleted, plan = 'free', subscription = null, onOpenPlans }) {
   const [confirm, setConfirm] = useState(false)
   const [busy, setBusy] = useState(null) // 'signout' | 'delete'
   const [error, setError] = useState(null)
@@ -275,6 +324,17 @@ export function AccountDialog({ open, onClose, account, onSignOut, onAccountDele
         Has entrado como <strong>{account?.email}</strong>.
       </p>
       <p className="modal__muted">Tus propuestas, tu diseño y tus textos guardados se guardan en tu cuenta.</p>
+      {onOpenPlans && (
+        <div className="account-plan">
+          <p>
+            Tu plan: <strong>{PLAN_LABELS[plan]}</strong>
+          </p>
+          {subscriptionSummary(plan, subscription) && <p className="modal__muted">{subscriptionSummary(plan, subscription)}</p>}
+          <button type="button" className="button button--ghost button--small" onClick={onOpenPlans}>
+            {plan === 'free' ? 'Ver planes' : 'Planes y suscripción'}
+          </button>
+        </div>
+      )}
       <div className="modal__actions modal__actions--start">
         <button type="button" className="button button--ghost" onClick={signOut} disabled={busy !== null}>
           {busy === 'signout' ? 'Cerrando sesión…' : 'Cerrar sesión'}

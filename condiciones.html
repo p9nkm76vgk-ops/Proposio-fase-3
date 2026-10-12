@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>Condiciones del servicio · proposio</title>
+    <style>
+      :root {
+        --ink: #17212f;
+        --text: #3a4554;
+        --muted: #637084;
+        --navy: #20375a;
+        --line: #d6dee7;
+        --todo-bg: #fff4d6;
+        --todo-text: #7a4b00;
+      }
+      body {
+        margin: 0;
+        background: #eef2f6;
+        color: var(--text);
+        font: 16px/1.65 system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      }
+      main {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 40px 20px 64px;
+      }
+      article {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 36px clamp(20px, 5vw, 48px);
+      }
+      h1 {
+        color: var(--ink);
+        font-size: 30px;
+        line-height: 1.2;
+        margin: 0 0 6px;
+      }
+      h2 {
+        color: var(--ink);
+        font-size: 19px;
+        margin: 32px 0 8px;
+      }
+      p,
+      ul {
+        margin: 0 0 12px;
+      }
+      li + li {
+        margin-top: 4px;
+      }
+      a {
+        color: var(--navy);
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .todo {
+        background: var(--todo-bg);
+        color: var(--todo-text);
+        padding: 0 4px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .draft-notice {
+        border: 1px solid #f0d28a;
+        background: var(--todo-bg);
+        color: var(--todo-text);
+        border-radius: 10px;
+        padding: 12px 14px;
+        margin-bottom: 24px;
+        font-size: 14px;
+      }
+      .back {
+        display: inline-block;
+        margin-bottom: 16px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="./">← Volver a proposio</a>
+      <article>
+        <!-- BORRADOR: completa los datos marcados y elimina este aviso ANTES de activar los pagos.
+             Debe revisarlo una gestoría o un abogado. -->
+        <p class="draft-notice">
+          Borrador pendiente de completar y revisar. No actives los pagos hasta completar los datos marcados en amarillo.
+        </p>
+
+        <h1>Condiciones del servicio</h1>
+        <p class="meta">Última actualización: <span class="todo">[COMPLETAR: fecha]</span></p>
+
+        <h2>1. Quién presta el servicio</h2>
+        <p>
+          proposio es un servicio prestado por <span class="todo">[COMPLETAR: titular, NIF y domicilio, según te indique tu
+          gestoría]</span>. Contacto: <span class="todo">[COMPLETAR: email de contacto]</span>.
+        </p>
+
+        <h2>2. Qué es proposio</h2>
+        <p>
+          proposio es una herramienta web para crear propuestas comerciales, descargarlas en PDF y, con cuenta,
+          enviarlas por enlace para que el cliente las vea y las acepte. El contenido de cada
+          propuesta lo escribe el usuario: proposio lo ordena y le da formato, pero no lo revisa ni garantiza que sea
+          correcto, completo o adecuado desde el punto de vista legal, fiscal o comercial.
+        </p>
+
+        <h2>3. Uso sin cuenta y con cuenta</h2>
+        <p>
+          Puedes usar proposio sin registrarte; en ese caso, los datos se guardan solo en tu navegador y tú eres
+          responsable de conservarlos. Si creas una cuenta, eres responsable de mantener el acceso a tu email y de la
+          actividad realizada con tu cuenta.
+        </p>
+
+        <h2>4. Propuestas enviadas por enlace</h2>
+        <p>
+          Cualquier persona que tenga el enlace de una propuesta puede verla y aceptarla: compártelo solo con tu cliente y
+          desactívalo si ya no lo necesitas. La aceptación registra el nombre que escribe tu cliente, la fecha y los
+          extras elegidos. proposio no verifica la identidad de quien acepta, no cobra nada al cliente y no es parte del
+          acuerdo entre tú y tu cliente. Las estadísticas de apertura son orientativas (por ejemplo, pueden contar
+          aperturas de otras personas que tengan el enlace).
+        </p>
+        <p>
+          La calculadora de precio por hora hace una estimación con los datos que tú escribes y no es asesoramiento
+          fiscal ni financiero.
+        </p>
+
+        <h2>5. Planes y precios</h2>
+        <ul>
+          <li><strong>Gratis</strong>: sin coste, con un número limitado de propuestas al mes.</li>
+          <li>
+            <strong>Planes de pago (Pro y, si está disponible, Business)</strong>: suscripción mensual con más propuestas
+            al mes y funciones adicionales, descritas en la página de planes en el momento de contratar.
+          </li>
+        </ul>
+        <p>
+          El precio y lo que incluye cada plan se muestran antes de pagar. <span class="todo">[COMPLETAR: indica si los
+          precios incluyen IVA u otros impuestos, según cómo lo configures]</span>
+        </p>
+
+        <h2>6. Pago, renovación y cancelación</h2>
+        <ul>
+          <li>Los pagos se procesan mediante Stripe. proposio no ve ni guarda los datos de tu tarjeta.</li>
+          <li>La suscripción se renueva automáticamente cada mes hasta que la canceles.</li>
+          <li>
+            Puedes cancelarla en cualquier momento desde la app, en «Gestionar suscripción». Mantendrás tu plan hasta el
+            final del periodo ya pagado y después pasarás al plan gratuito, sin perder tus propuestas.
+          </li>
+          <li>Si un cobro falla, Stripe lo reintentará. Si no se puede cobrar, la cuenta pasará al plan gratuito.</li>
+          <li>Salvo que la ley disponga otra cosa, no se reembolsan periodos parciales.</li>
+        </ul>
+
+        <h2>7. Derecho de desistimiento</h2>
+        <p>
+          <span class="todo">[COMPLETAR con asesoramiento: si contratas como consumidor, la ley puede reconocerte un
+          derecho de desistimiento de 14 días, con excepciones cuando el servicio digital empieza a prestarse de inmediato
+          con tu consentimiento. Si contratas como profesional, este derecho normalmente no aplica.]</span>
+        </p>
+
+        <h2>8. Uso aceptable</h2>
+        <p>
+          No puedes usar proposio para actividades ilegales, para suplantar a otras personas, para enviar contenido
+          engañoso a terceros ni para intentar acceder a datos de otros usuarios o sobrecargar el servicio.
+        </p>
+
+        <h2>9. Tu contenido</h2>
+        <p>
+          El contenido de tus propuestas es tuyo. Solo lo tratamos para prestarte el servicio, como se explica en la
+          <a href="privacidad.html">política de privacidad</a>. Eres responsable de tener derecho a usar los datos de tus
+          clientes y los logotipos que incluyas.
+        </p>
+
+        <h2>10. Disponibilidad y responsabilidad</h2>
+        <p>
+          Intentamos que proposio funcione de forma continua, pero puede haber interrupciones por mantenimiento o fallos
+          de los proveedores. Te recomendamos descargar en PDF las propuestas importantes. En la medida permitida por la
+          ley, proposio no responde de los daños derivados del contenido de las propuestas ni de decisiones comerciales
+          tomadas a partir de ellas.
+        </p>
+
+        <h2>11. Cambios</h2>
+        <p>
+          Si cambian estas condiciones o los precios, te avisaremos con antelación razonable. Los cambios de precio no se
+          aplicarán al periodo que ya hayas pagado.
+        </p>
+
+        <h2>12. Baja</h2>
+        <p>
+          Puedes eliminar tu cuenta desde «Mi cuenta». Si tienes una suscripción activa, primero debes cancelarla.
+        </p>
+
+        <h2>13. Ley aplicable</h2>
+        <p>
+          Estas condiciones se rigen por la ley española. <span class="todo">[COMPLETAR con asesoramiento: tribunales
+          competentes y, si vendes a consumidores, referencia a sus derechos]</span>
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

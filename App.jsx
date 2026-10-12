@@ -10,20 +10,40 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AccountDialog, LoginDialog, ProposalsDialog } from './AccountDialogs.jsx'
 import { AppHeader } from './AppHeader.jsx'
+import { DashboardDialog } from './DashboardDialog.jsx'
+import { PlansDialog } from './PlansDialog.jsx'
+import { ShareDialog, shareStatusText } from './ShareDialog.jsx'
 import { Modal, Toast } from './Feedback.jsx'
 import { ProposalForm } from './ProposalForm.jsx'
 import { ProposalPreview } from './ProposalPreview.jsx'
 import * as cloud from './cloud.js'
+import { PAYMENTS } from './config.js'
+import { PLAN_LABELS, applyEntitlements, getEntitlements, isPaidPlan } from './entitlements.js'
+import { catalogStore, normalizeCatalog } from './catalog.js'
 import { buildDocument } from './document.js'
 import { clearDraft, loadDraft, saveDraft } from './drafts.js'
 import { downloadProposalPdf } from './pdf.js'
+import { pricingSummary } from './pricing.js'
+import { rateStore } from './rate.js'
 import { loadProfile, saveProfile } from './profile.js'
-import { createEmptyProposal, createSampleProposal, duplicateProposal, hasUserContent, setIn } from './proposal.js'
+import { createEmptyProposal, duplicateProposal, hasUserContent, setIn } from './proposal.js'
+import { SAMPLE_PROFESSIONS, createProfessionSample } from './samples.js'
+import { acceptanceToast, isShareOutdated, markAcceptancesSeen, needsFollowUp, newAcceptances } from './sharing.js'
 import { readLocalSnippets, setCloudSnippetStore, setLocalSnippetStore } from './snippets.js'
 import { getUsage, registerExport } from './usage.js'
 import { fieldIdFromPath, validateProposal } from './validation.js'
 
 const CLOUD_SAVE_DELAY = 1200
+const SHARES_REFRESH_MIN_MS = 60 * 1000 // como mucho, una consulta por minuto al volver a la pestaña
+
+/** Combina una respuesta de uso con lo ya conocido: si no trae plan o suscripción, se conservan. */
+function mergeUsage(prev, next) {
+  return {
+    ...next,
+    plan: next.plan ?? prev?.plan ?? 'free',
+    subscription: next.subscription === undefined ? (prev?.subscription ?? null) : next.subscription,
+  }
+}
 
 export default function App() {
   const [proposal, setProposal] = useState(() => loadDraft() ?? createEmptyProposal(loadProfile() ?? {}))
@@ -43,21 +63,37 @@ export default function App() {
   const [cloudUsage, setCloudUsage] = useState(null)
   const [formKey, setFormKey] = useState(0) // remonta el formulario al cambiar de modo (textos guardados)
 
+  // Envío por enlace
+  const [shareState, setShareState] = useState({ proposalId: null, share: null }) // enlace de la propuesta abierta
+  const [shareBusy, setShareBusy] = useState(false)
+  const [shareError, setShareError] = useState(null)
+  const [shares, setShares] = useState([]) // todos los enlaces (avisos, «Mis propuestas» y panel)
+  const [sharesLoading, setSharesLoading] = useState(false)
+
   const proposalRef = useRef(proposal)
   const accountRef = useRef(account)
   const lastSavedRef = useRef(null) // JSON de la última versión guardada en la cuenta
+  const sharesFetchedAt = useRef(0)
   const savingRef = useRef(Promise.resolve())
   const hadAccountAtStart = useRef(null)
   proposalRef.current = proposal
   accountRef.current = account
 
-  const errors = useMemo(() => validateProposal(proposal), [proposal])
-  const model = useMemo(() => buildDocument(proposal), [proposal])
   const localUsage = useMemo(() => getUsage(proposal.id), [proposal.id, usageVersion])
   const usage = account
     ? (cloudUsage ?? { used: 0, limit: 0, remaining: 0, alreadyCounted: false, canExport: true, loading: true })
     : localUsage
+
+  // Plan y funciones disponibles (sin pagos activados, todo está disponible)
+  const plan = account ? (cloudUsage?.plan ?? 'free') : 'free'
+  const entitlements = useMemo(() => getEntitlements(plan, PAYMENTS.enabled), [plan])
+  // Lo que se muestra y se descarga respeta el plan; lo guardado no se toca
+  const outputProposal = useMemo(() => applyEntitlements(proposal, entitlements), [proposal, entitlements])
+  const model = useMemo(() => buildDocument(outputProposal), [outputProposal])
+  // Se valida lo que se va a descargar o enviar (sin lo que tu plan no incluye)
+  const errors = useMemo(() => validateProposal(outputProposal), [outputProposal])
   const errorCount = Object.keys(errors).length
+  const openPlans = useCallback(() => setDialog({ kind: 'plans' }), [])
 
   // ─── Copia local (siempre) ────────────────────────────────────────────────
   useEffect(() => {
@@ -99,6 +135,8 @@ export default function App() {
   useEffect(() => {
     if (!account) {
       setLocalSnippetStore()
+      catalogStore.useLocal()
+      rateStore.useLocal()
       setCloudUsage(null)
       setProfileReadyFor(null)
       setFormKey((k) => k + 1)
@@ -111,10 +149,20 @@ export default function App() {
         if (cancelled) return
         const current = proposalRef.current
         let snippets = profile?.snippets
+        let catalog = profile?.catalog
+        let pricingSettings = profile?.pricingSettings
         if (!profile) {
-          // Primera vez con esta cuenta: se copian tus datos, diseño y textos de este navegador
+          // Primera vez con esta cuenta: se copian tus datos, diseño, textos, catálogo y tarifa de este navegador
           snippets = readLocalSnippets()
-          await cloud.saveProfile(account, { professional: current.professional, design: current.design, snippets })
+          catalog = normalizeCatalog(catalogStore.readLocal())
+          pricingSettings = rateStore.readLocal()
+          await cloud.saveProfile(account, {
+            professional: current.professional,
+            design: current.design,
+            snippets,
+            catalog,
+            pricing_settings: pricingSettings,
+          })
         } else if (!hasUserContent(current)) {
           setProposal((prev) => ({ ...prev, professional: profile.professional, design: profile.design }))
         }
@@ -123,6 +171,9 @@ export default function App() {
             .saveProfile(account, { snippets: all })
             .catch((err) => setToast({ type: 'error', message: err.userMessage }))
         })
+        const reportError = (err) => setToast({ type: 'error', message: err.userMessage })
+        catalogStore.useCloud(catalog ?? [], (all) => cloud.saveProfile(account, { catalog: all }).catch(reportError))
+        rateStore.useCloud(pricingSettings ?? {}, (all) => cloud.saveProfile(account, { pricing_settings: all }).catch(reportError))
         setFormKey((k) => k + 1)
         setProfileReadyFor(account.userId)
         if (hadAccountAtStart.current === false) {
@@ -164,7 +215,11 @@ export default function App() {
 
   useEffect(() => {
     if (!account || profileReadyFor !== account.userId || !hasUserContent(proposal)) return undefined
-    if (JSON.stringify(proposal) === lastSavedRef.current) return undefined
+    if (JSON.stringify(proposal) === lastSavedRef.current) {
+      // Se deshizo un cambio antes de guardarlo: vuelve a coincidir con lo guardado
+      setCloudSave((prev) => (prev === 'pending' ? 'saved' : prev))
+      return undefined
+    }
     setCloudSave('pending')
     const timer = setTimeout(() => flushCloudSave().catch(() => {}), CLOUD_SAVE_DELAY)
     return () => clearTimeout(timer)
@@ -187,12 +242,103 @@ export default function App() {
     let cancelled = false
     cloud
       .fetchUsage(proposal.id)
-      .then((u) => !cancelled && setCloudUsage(u))
+      .then((u) => !cancelled && setCloudUsage((prev) => mergeUsage(prev, u)))
       .catch(() => {})
     return () => {
       cancelled = true
     }
   }, [account, proposal.id, usageVersion])
+
+  // Enlace de la propuesta abierta (si se envió)
+  const currentShare = account && shareState.proposalId === proposal.id ? shareState.share : null
+  useEffect(() => {
+    if (!account) return undefined
+    let cancelled = false
+    cloud
+      .getShare(proposal.id, { withSnapshot: true })
+      .then((share) => !cancelled && setShareState({ proposalId: proposal.id, share }))
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [account, proposal.id])
+
+  // Todos los enlaces: avisa de las propuestas aceptadas desde la última vez
+  const refreshShares = useCallback(async ({ force = false } = {}) => {
+    const acc = accountRef.current
+    if (!acc) return
+    if (!force && Date.now() - sharesFetchedAt.current < SHARES_REFRESH_MIN_MS) return
+    sharesFetchedAt.current = Date.now()
+    setSharesLoading(true)
+    try {
+      const list = await cloud.listShares()
+      if (accountRef.current?.userId !== acc.userId) return
+      setShares(list)
+      const fresh = newAcceptances(list, acc.userId)
+      if (fresh.length) {
+        markAcceptancesSeen(fresh, acc.userId)
+        setToast({ type: 'success', message: acceptanceToast(fresh) })
+        // Si la propuesta abierta es una de ellas, se actualiza su estado
+        const open = fresh.find((sh) => sh.proposalId === proposalRef.current.id)
+        if (open) setShareState((prev) => (prev.proposalId === open.proposalId ? { ...prev, share: { ...prev.share, ...open, snapshot: prev.share?.snapshot ?? null } } : prev))
+      }
+    } catch {
+      // Sin conexión: se intentará en la próxima visita a la pestaña
+    } finally {
+      setSharesLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!account || profileReadyFor !== account.userId) {
+      setShares([])
+      return undefined
+    }
+    refreshShares({ force: true })
+    const onFocus = () => document.visibilityState === 'visible' && refreshShares()
+    document.addEventListener('visibilitychange', onFocus)
+    window.addEventListener('focus', onFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', onFocus)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [account, profileReadyFor, refreshShares])
+
+  // Vuelta desde la página de pago de Stripe (?pago=ok | ?pago=cancelado)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const result = params.get('pago')
+    if (!result) return
+    params.delete('pago')
+    const clean = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`
+    window.history.replaceState(null, '', clean)
+    if (result === 'cancelado') setToast({ type: 'success', message: 'Pago cancelado. No se ha cobrado nada.' })
+    if (result === 'ok') {
+      setToast({ type: 'success', message: 'Pago completado. Estamos activando tu plan…' })
+      sessionStorage.setItem('proposio.awaitingPlan', '1')
+    }
+  }, [])
+
+  // Tras pagar, el plan se activa cuando Stripe avisa al servidor (unos segundos)
+  useEffect(() => {
+    if (!account || !sessionStorage.getItem('proposio.awaitingPlan')) return undefined
+    if (isPaidPlan(cloudUsage?.plan)) {
+      sessionStorage.removeItem('proposio.awaitingPlan')
+      setToast({ type: 'success', message: `¡Listo! Ya tienes el plan ${PLAN_LABELS[cloudUsage.plan]}.` })
+      return undefined
+    }
+    let attempts = 0
+    const timer = setInterval(() => {
+      attempts += 1
+      setUsageVersion((v) => v + 1)
+      if (attempts >= 10) {
+        clearInterval(timer)
+        sessionStorage.removeItem('proposio.awaitingPlan')
+        setToast({ type: 'error', message: 'El pago está hecho, pero el plan aún no aparece. Recarga la página en un minuto.' })
+      }
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [account, cloudUsage?.plan])
 
   // ─── Utilidades de la interfaz ────────────────────────────────────────────
   const switchTab = (tab) => {
@@ -269,13 +415,18 @@ export default function App() {
         ),
     )
 
-  const handleSample = () =>
+  const handleSample = () => setDialog({ kind: 'sample' })
+
+  const loadSample = (professionId) =>
     replaceCurrent(
       '¿Cargar la propuesta de ejemplo?',
       'Se sustituirá el contenido actual del borrador por datos de ejemplo ficticios.',
       'Cargar ejemplo',
       () =>
-        resetWith(createSampleProposal({ design: proposalRef.current.design }), 'Ejemplo cargado. Edítalo para ver cómo cambia la vista previa.'),
+        resetWith(
+          createProfessionSample(professionId, proposalRef.current.design),
+          'Ejemplo cargado. Cambia los datos por los tuyos antes de enviarlo.',
+        ),
     )
 
   const handleDuplicate = async () => {
@@ -301,21 +452,25 @@ export default function App() {
     })
   }
 
+  /** ¿Está completa la propuesta? Si no, muestra los errores y devuelve false. */
+  const checkReady = () => {
+    if (errorCount === 0) return true
+    setShowAllErrors(true)
+    setToast({
+      type: 'error',
+      message:
+        errorCount === 1
+          ? 'Falta 1 dato obligatorio o hay un valor no válido.'
+          : `Faltan datos obligatorios o hay valores no válidos (${errorCount}).`,
+    })
+    focusFirstError()
+    return false
+  }
+
   // ─── Exportar ─────────────────────────────────────────────────────────────
   const handleExport = async () => {
     if (exporting) return
-    if (errorCount > 0) {
-      setShowAllErrors(true)
-      setToast({
-        type: 'error',
-        message:
-          errorCount === 1
-            ? 'Falta 1 dato obligatorio o hay un valor no válido.'
-            : `Faltan datos obligatorios o hay valores no válidos (${errorCount}).`,
-      })
-      focusFirstError()
-      return
-    }
+    if (!checkReady()) return
 
     setExporting(true)
     try {
@@ -323,19 +478,19 @@ export default function App() {
         // Con cuenta: el servidor decide si se puede descargar
         await flushCloudSave()
         const result = await cloud.registerExport(proposal.id)
-        setCloudUsage(result.usage)
+        setCloudUsage((prev) => mergeUsage(prev, result.usage))
         if (!result.allowed) {
           setDialog({ kind: 'limit' })
           return
         }
-        await downloadProposalPdf(proposal)
+        await downloadProposalPdf(outputProposal)
         setToast({ type: 'success', message: 'PDF generado. Revisa tu carpeta de descargas.' })
       } else {
         if (!localUsage.canExport) {
           setDialog({ kind: 'limit' })
           return
         }
-        await downloadProposalPdf(proposal)
+        await downloadProposalPdf(outputProposal)
         const stored = registerExport(proposal.id)
         setUsageVersion((v) => v + 1)
         setToast({
@@ -350,6 +505,64 @@ export default function App() {
       setToast({ type: 'error', message: error?.userMessage ?? 'No se pudo generar el PDF. Inténtalo de nuevo.' })
     } finally {
       setExporting(false)
+    }
+  }
+
+  // ─── Enviar al cliente por enlace ─────────────────────────────────────────
+  /** Crea el enlace o lo actualiza con la versión actual. Cuenta en el cupo igual que descargar. */
+  const publishShare = async () => {
+    const acc = accountRef.current
+    if (!acc || shareBusy) return
+    const id = proposalRef.current.id
+    setShareBusy(true)
+    setShareError(null)
+    try {
+      await flushCloudSave()
+      const result = await cloud.registerExport(id)
+      setCloudUsage((prev) => mergeUsage(prev, result.usage))
+      if (!result.allowed) {
+        setDialog({ kind: 'limit' })
+        return
+      }
+      const share = await cloud.shareProposal(acc, outputProposal, pricingSummary(outputProposal))
+      setShareState({ proposalId: id, share })
+      refreshShares({ force: true })
+    } catch (err) {
+      setShareError(err?.userMessage ?? 'No se pudo preparar el enlace. Inténtalo de nuevo.')
+    } finally {
+      setShareBusy(false)
+    }
+  }
+
+  const handleShare = () => {
+    if (!account) {
+      setDialog({ kind: 'login', intro: 'Para enviar la propuesta por enlace necesitas una cuenta gratuita: así podremos avisarte cuando tu cliente la acepte.' })
+      return
+    }
+    if (!checkReady()) return
+    setShareError(null)
+    setDialog({ kind: 'share' })
+    // Si aún no hay enlace, se crea al momento. Si lo hay y cambió, la ventana ofrece actualizarlo.
+    if (!currentShare) publishShare()
+  }
+
+  const openDashboard = () => {
+    setDialog({ kind: 'dashboard' })
+    if (entitlements.dashboard) refreshShares({ force: true })
+  }
+  const pendingCount = account && entitlements.dashboard ? shares.filter((sh) => needsFollowUp(sh)).length : 0
+
+  const handleSetShareActive = async (active) => {
+    setShareBusy(true)
+    setShareError(null)
+    try {
+      const share = await cloud.setShareActive(proposal.id, active)
+      setShareState({ proposalId: proposal.id, share })
+      refreshShares({ force: true })
+    } catch (err) {
+      setShareError(err?.userMessage ?? 'No se pudo cambiar el enlace.')
+    } finally {
+      setShareBusy(false)
     }
   }
 
@@ -371,6 +584,7 @@ export default function App() {
       lastSavedRef.current = null
       setCloudSave('idle')
     }
+    setShares((list) => list.filter((sh) => sh.proposalId !== id))
     setToast({ type: 'success', message: 'Propuesta eliminada.' })
   }
 
@@ -419,6 +633,9 @@ export default function App() {
         onLogin={() => setDialog({ kind: 'login' })}
         onOpenProposals={() => setDialog({ kind: 'proposals' })}
         onOpenAccount={() => setDialog({ kind: 'account' })}
+        onOpenDashboard={openDashboard}
+        onOpenPlans={PAYMENTS.enabled ? openPlans : null}
+        plan={plan}
         exporting={exporting}
       />
 
@@ -466,18 +683,57 @@ export default function App() {
                 </>
               )}
             </p>
+            {pendingCount > 0 && (
+              <p className="follow-up-banner" role="status">
+                {pendingCount === 1
+                  ? 'Tienes 1 propuesta enviada sin respuesta desde hace días.'
+                  : `Tienes ${pendingCount} propuestas enviadas sin respuesta desde hace días.`}{' '}
+                <button type="button" className="link-button" onClick={openDashboard}>
+                  Ver y recordar
+                </button>
+              </p>
+            )}
           </div>
-          <ProposalForm key={formKey} proposal={proposal} onFieldChange={handleFieldChange} onBlur={handleBlur} errorFor={errorFor} />
+          <ProposalForm
+            key={formKey}
+            proposal={proposal}
+            onFieldChange={handleFieldChange}
+            onBlur={handleBlur}
+            errorFor={errorFor}
+            entitlements={entitlements}
+            onLocked={openPlans}
+          />
           <div className="editor-footer">
-            <button type="button" className="button button--primary button--large" onClick={handleExport} disabled={exporting}>
-              {exporting ? 'Generando…' : 'Descargar PDF'}
-            </button>
+            <div className="editor-footer__buttons">
+              <button type="button" className="button button--primary button--large" onClick={handleExport} disabled={exporting}>
+                {exporting ? 'Generando…' : 'Descargar PDF'}
+              </button>
+              {cloud.cloudEnabled && (
+                <button type="button" className="button button--ghost button--large" onClick={handleShare} disabled={shareBusy}>
+                  {currentShare ? 'Ver enlace enviado' : 'Enviar al cliente'}
+                </button>
+              )}
+            </div>
+            {currentShare && (
+              <p className={`share-pill share-pill--${currentShare.status === 'accepted' ? 'accepted' : currentShare.revoked ? 'off' : 'sent'}`}>
+                {shareStatusText(currentShare, entitlements.viewTracking)}
+                {currentShare.status !== 'accepted' && isShareOutdated(currentShare, outputProposal) && ' · Tiene cambios sin enviar'}
+              </p>
+            )}
             <p className="editor-footer__note">
               {usage.loading
                 ? 'Comprobando tu uso de este mes…'
                 : usage.alreadyCounted
                   ? 'Esta propuesta ya se contó este mes: puedes volver a descargarla sin gastar otra.'
-                  : `Te quedan ${usage.remaining} de ${usage.limit} propuestas este mes. Volver a descargar la misma propuesta no cuenta de nuevo.`}
+                  : `Te quedan ${usage.remaining} de ${usage.limit} propuestas este mes. Descargar o enviar la misma propuesta otra vez no cuenta de nuevo.`}
+              {PAYMENTS.enabled && !isPaidPlan(plan) && (
+                <>
+                  {' '}
+                  <button type="button" className="link-button" onClick={openPlans}>
+                    Ver planes
+                  </button>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -524,35 +780,88 @@ export default function App() {
         <p>{dialog?.message}</p>
       </Modal>
 
+      <Modal open={dialog?.kind === 'sample'} title="Empieza con un ejemplo" onClose={closeDialog} wide>
+        <p className="modal__muted">
+          Elige el más parecido a tu trabajo. Todos los datos son ficticios: cámbialos por los tuyos antes de enviar la propuesta.
+        </p>
+        <ul className="sample-list">
+          {SAMPLE_PROFESSIONS.map((s) => (
+            <li key={s.id}>
+              <button type="button" className="sample-option" onClick={() => loadSample(s.id)}>
+                <span className="sample-option__label">{s.label}</span>
+                <span className="sample-option__example">{s.example}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        <div className="modal__actions">
+          <button type="button" className="button button--ghost" onClick={closeDialog}>
+            Cancelar
+          </button>
+        </div>
+      </Modal>
+
       <Modal
         open={dialog?.kind === 'limit'}
         title="Has alcanzado el límite de este mes"
         onClose={closeDialog}
         actions={
-          <button type="button" className="button button--primary" onClick={closeDialog}>
-            Entendido
-          </button>
+          <>
+            <button type="button" className={`button ${PAYMENTS.enabled ? 'button--ghost' : 'button--primary'}`} onClick={closeDialog}>
+              Entendido
+            </button>
+            {PAYMENTS.enabled && plan !== 'business' && (
+              <button type="button" className="button button--primary" onClick={openPlans}>
+                Ver planes
+              </button>
+            )}
+          </>
         }
       >
         <p>
-          El plan gratuito permite descargar {usage.limit} propuestas distintas al mes. El contador se reinicia el día 1
-          del mes que viene.
+          Tu plan {PLAN_LABELS[plan]} permite descargar {usage.limit} propuestas distintas al mes. El contador se reinicia el
+          día 1 del mes que viene.
         </p>
         <p>
-          Puedes seguir editando y volver a descargar cualquiera de las propuestas que ya descargaste este mes. Los
-          planes de pago todavía no están disponibles.
+          Puedes seguir editando y volver a descargar cualquiera de las propuestas que ya descargaste este mes.
+          {!PAYMENTS.enabled && ' Los planes de pago todavía no están disponibles.'}
         </p>
       </Modal>
 
       {cloud.cloudEnabled && (
         <>
-          <LoginDialog open={dialog?.kind === 'login'} onClose={closeDialog} />
+          <LoginDialog open={dialog?.kind === 'login'} onClose={closeDialog} intro={dialog?.intro} />
+          <ShareDialog
+            open={dialog?.kind === 'share'}
+            onClose={closeDialog}
+            share={currentShare}
+            proposal={outputProposal}
+            busy={shareBusy}
+            error={shareError}
+            entitlements={entitlements}
+            onUpdate={publishShare}
+            onSetActive={handleSetShareActive}
+            onOpenPlans={PAYMENTS.enabled ? openPlans : null}
+          />
           <ProposalsDialog
             open={dialog?.kind === 'proposals'}
             onClose={closeDialog}
             currentId={proposal.id}
             onOpenProposal={handleOpenProposal}
             onDeleteProposal={handleDeleteProposal}
+            locked={!entitlements.history}
+            onOpenPlans={openPlans}
+            shares={shares}
+            viewTracking={entitlements.viewTracking}
+          />
+          <DashboardDialog
+            open={dialog?.kind === 'dashboard'}
+            onClose={closeDialog}
+            shares={shares}
+            loading={sharesLoading}
+            locked={!entitlements.dashboard}
+            onOpenPlans={openPlans}
+            onOpenProposal={handleOpenProposal}
           />
           <AccountDialog
             open={dialog?.kind === 'account'}
@@ -560,7 +869,20 @@ export default function App() {
             account={account}
             onSignOut={handleSignOut}
             onAccountDeleted={handleAccountDeleted}
+            plan={plan}
+            subscription={cloudUsage?.subscription ?? null}
+            onOpenPlans={PAYMENTS.enabled ? openPlans : null}
           />
+          {PAYMENTS.enabled && (
+            <PlansDialog
+              open={dialog?.kind === 'plans'}
+              onClose={closeDialog}
+              account={account}
+              plan={plan}
+              subscription={cloudUsage?.subscription ?? null}
+              onLogin={() => setDialog({ kind: 'login' })}
+            />
+          )}
         </>
       )}
     </div>

@@ -19,7 +19,9 @@ function TemplateThumb({ template, accent }) {
   )
 }
 
-export function DesignEditor({ design, onChange }) {
+export function DesignEditor({ design, onChange, entitlements, onLocked }) {
+  const brandLocked = entitlements ? !entitlements.brand : false
+  const templateLocked = (value) => (entitlements ? !entitlements.templates.includes(value) : false)
   const fileRef = useRef(null)
   const [loading, setLoading] = useState(false)
   const [logoError, setLogoError] = useState(null)
@@ -45,23 +47,45 @@ export function DesignEditor({ design, onChange }) {
       <fieldset className="design-group" id={fieldIdFromPath('design.template')} tabIndex={-1}>
         <legend className="field__label">Plantilla</legend>
         <div className="tpl-options">
-          {TEMPLATES.map((t) => (
-            <label key={t.value} className={`tpl-option ${design.template === t.value ? 'tpl-option--active' : ''}`}>
-              <input
-                type="radio"
-                name="design-template"
-                value={t.value}
-                checked={design.template === t.value}
-                onChange={() => onChange('template', t.value)}
-              />
-              <TemplateThumb template={t.value} accent={design.accent} />
-              <span className="tpl-option__label">{t.label}</span>
-              <span className="tpl-option__hint">{t.hint}</span>
-            </label>
-          ))}
+          {TEMPLATES.map((t) =>
+            templateLocked(t.value) ? (
+              <button key={t.value} type="button" className="tpl-option tpl-option--locked" onClick={onLocked}>
+                <TemplateThumb template={t.value} accent={design.accent} />
+                <span className="tpl-option__label">
+                  {t.label} <span className="pro-badge">Pro</span>
+                </span>
+                <span className="tpl-option__hint">{t.hint}</span>
+              </button>
+            ) : (
+              <label key={t.value} className={`tpl-option ${design.template === t.value ? 'tpl-option--active' : ''}`}>
+                <input
+                  type="radio"
+                  name="design-template"
+                  value={t.value}
+                  checked={design.template === t.value}
+                  onChange={() => onChange('template', t.value)}
+                />
+                <TemplateThumb template={t.value} accent={design.accent} />
+                <span className="tpl-option__label">{t.label}</span>
+                <span className="tpl-option__hint">{t.hint}</span>
+              </label>
+            ),
+          )}
         </div>
       </fieldset>
 
+      {brandLocked ? (
+        <div className="design-group locked-panel">
+          <span className="field__label">
+            Color y logotipo <span className="pro-badge">Pro</span>
+          </span>
+          <p className="field__hint">Con Pro, el documento lleva tu color y tu logotipo.</p>
+          <button type="button" className="button button--ghost button--small" onClick={onLocked}>
+            Ver planes
+          </button>
+        </div>
+      ) : (
+        <>
       <fieldset className="design-group" id={fieldIdFromPath('design.accent')} tabIndex={-1}>
         <legend className="field__label">Color principal</legend>
         <div className="swatches">
@@ -134,6 +158,8 @@ export function DesignEditor({ design, onChange }) {
         </p>
         {logoError && <p className="field__error">{logoError}</p>}
       </div>
+        </>
+      )}
     </>
   )
 }

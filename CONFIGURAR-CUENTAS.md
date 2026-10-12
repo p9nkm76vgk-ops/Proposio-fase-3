@@ -1,7 +1,7 @@
 # Activar las cuentas de usuario (Supabase)
 
 Mientras no hagas estos pasos, proposio funciona sin cuentas, guardando todo en el navegador.
-Todo se hace desde la web: no necesitas instalar nada ni volver a generar `index.html`.
+Todo se hace desde la web: no necesitas instalar nada ni volver a generar `app.html`.
 
 **Coste: 0 €** con el plan gratuito de Supabase. Límites que conviene conocer:
 
@@ -16,9 +16,8 @@ Revisa los límites actuales en la web de Supabase antes de lanzar: pueden cambi
 
 ## 1. Completa la política de privacidad
 
-Abre `privacidad.html` y sustituye todos los textos `[COMPLETAR]` (tu nombre o empresa, NIF,
-domicilio, email de contacto, fecha y región del servidor). Después borra el aviso amarillo de
-«Borrador». Conviene que la revise un profesional antes de abrir la app al público.
+Revisa `privacidad.html`: debe indicar quién es el responsable y un email de contacto, y la región
+del servidor que elijas. Conviene que la revise un profesional antes de abrir la app al público.
 
 ## 2. Crea el proyecto en Supabase
 
@@ -33,12 +32,14 @@ domicilio, email de contacto, fecha y región del servidor). Después borra el a
 1. En el menú izquierdo, abre **SQL Editor** → **New query**.
 2. Copia **todo** el contenido de `supabase.sql`, pégalo y pulsa **Run**.
 3. Debe terminar con «Success. No rows returned». Si sale un error, cópiamelo.
+4. Si actualizas proposio más adelante, vuelve a pegar y ejecutar `supabase.sql` completo: se puede repetir sin
+   perder datos y añade lo nuevo (por ejemplo, la tabla de propuestas enviadas por enlace).
 
 ## 4. Configura las direcciones de la web
 
 En **Authentication → URL Configuration**:
 
-- **Site URL**: la dirección de tu web, por ejemplo `https://TU_USUARIO.github.io/proposio/`
+- **Site URL**: la dirección de la app, por ejemplo `https://TU_USUARIO.github.io/proposio/app.html`
 - **Redirect URLs** → **Add URL**: añade la misma dirección.
   Si algún día trabajas en local, añade también `http://localhost:5173/dev.html`.
 
@@ -98,11 +99,14 @@ No lo compres todavía: primero prueba la app tú mismo con tu email.
 
 ## 9. Prueba
 
-1. Abre tu web: en la cabecera debe aparecer **Entrar**.
+1. Abre la app (`app.html`): en la cabecera debe aparecer **Entrar**.
 2. Escribe tu email (el de tu cuenta de Supabase), acepta la privacidad y pulsa **Enviar enlace**.
 3. Abre el enlace del email **en el mismo navegador**. Debes volver a proposio con la sesión iniciada.
 4. Escribe una propuesta: arriba debe poner «Guardado en tu cuenta».
 5. Abre la web en otro navegador o en el móvil, entra con el mismo email y comprueba que tu
    propuesta aparece en **Mis propuestas**.
+
+6. Pulsa **Enviar al cliente**, copia el enlace y ábrelo en otro navegador (o en modo incógnito): debes ver la
+   propuesta. Acéptala con un nombre de prueba. Vuelve a la app y recarga: debe aparecer el aviso de aceptación.
 
 Si algo falla, abre la consola del navegador (F12 → Consola) y mándame el mensaje en rojo.

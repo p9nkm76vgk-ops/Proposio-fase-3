@@ -363,6 +363,17 @@ export function renderProposalPdf(pdf, model) {
     else if (section.type === 'list') list(section.items, section.ordered)
     else if (section.type === 'timeline') timeline(section)
     else if (section.type === 'pricing') pricing(section)
+    else if (section.type === 'extras') {
+      table(
+        [
+          { key: 'concept', label: 'Extra', width: null },
+          { key: 'value', label: 'Importe', width: 40, align: 'right', strong: true },
+        ],
+        section.rows,
+      )
+      y += 3
+      paragraph(section.note, { size: 9, color: NEUTRAL.muted })
+    }
   })
 
   // ───────────── Pie de página en todas las páginas ─────────────
