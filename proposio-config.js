@@ -22,7 +22,7 @@ window.PROPOSIO_CONFIG = {
 
   // Botón «Continuar con Google». Ponlo en true SOLO cuando hayas activado Google en
   // Supabase (Authentication → Sign In / Providers → Google). Ver CONFIGURAR-CUENTAS.md.
-  googleLogin: false,
+  googleLogin: true,
 
   payments: {
     enabled: false,
