@@ -17,8 +17,8 @@
 //      (p. ej. 'IVA incluido'). Si vendes a consumidores, el precio mostrado debe ser el final.
 // ─────────────────────────────────────────────────────────────────────────────
 window.PROPOSIO_CONFIG = {
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://lyovhyfnhurjdoepnnte.supabase.co',
+  supabaseAnonKey: 'sb_publishable_x3GrXuxI4vPXhozKGGIu8w_EE6CuB5q',
 
   payments: {
     enabled: false,

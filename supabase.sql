@@ -310,7 +310,12 @@ drop trigger if exists shared_proposals_guard on public.shared_proposals;
 create trigger shared_proposals_guard before update on public.shared_proposals
   for each row execute function public.guard_shared_proposal();
 
--- Al borrar una propuesta, su enlace deja de existir.
+-- Al borrar una propuesta, su enlace deja de existir (clave foránea en cascada y, por si acaso, un disparador).
+alter table public.shared_proposals drop constraint if exists shared_proposals_proposal_fk;
+alter table public.shared_proposals
+  add constraint shared_proposals_proposal_fk
+  foreign key (user_id, proposal_id) references public.proposals (user_id, id) on delete cascade;
+
 create or replace function public.delete_shared_on_proposal_delete()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
